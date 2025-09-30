@@ -8,6 +8,8 @@ import TasksIconOneMenu from '../img-jsx/TasksIconMenu';
 import TasksIconTwoMenu from '../img-jsx/TasksIconTwoMenu';
 import ProfileOne from '../img-jsx/ProfileOne';
 import ProfileTwo from '../img-jsx/ProfileTwo';
+import GiftTwo from '../img-jsx/GiftTwo';
+import GiftOne from '../img-jsx/GiftOne';
 
 const Menu = () => {
   const location = useLocation();
@@ -26,6 +28,14 @@ const Menu = () => {
             {currentPath === '/' ? <HomeIconTwoMenu /> : <HomeIconOneMenu />}
             <span className="Name">
               Slots
+            </span>
+          </Link>
+        </div>
+         <div className={`menu-item ${currentPath === '/gifts' ? 'active' : ''}`}>
+          <Link to="/gifts" onClick={handleClick('/gifts')}>
+            {currentPath === '/gifts' ? <GiftTwo /> : <GiftOne />}
+            <span className="Name">
+              Gifts
             </span>
           </Link>
         </div>

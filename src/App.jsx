@@ -6,6 +6,7 @@ import Friends from './Pages/Friends/Friends.jsx';
 import Tasks from './Pages/Tasks/Tasks.jsx';
 import Loader from './Assets/Loader/Loader.jsx';
 import Profile from './Pages/Profile/Profile.jsx'
+import Gifts from './Pages/Gifts/Gifts.jsx';
 
 const AUTH_FUNCTION_URL = 'https://giftsblocksbackend.store/.netlify/functions/auth';
 
@@ -165,6 +166,7 @@ const App = () => {
             <Route path="/friends" element={<Friends isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
             <Route path="/tasks" element={<Tasks isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
             <Route path="/profile" element={<Profile isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
+            <Route path="/gifts" element={<Gifts isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
         </Routes>
     );
 };

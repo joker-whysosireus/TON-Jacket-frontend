@@ -12,7 +12,6 @@
   bottom: 7px; /* Подняли меню на 5px вверх */
   left: 0;
   right: 0;
-  background: #000000; 
   display: flex;
   justify-content: space-around;
   padding: 12px 0;
