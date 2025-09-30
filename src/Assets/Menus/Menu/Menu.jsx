@@ -43,7 +43,7 @@ const Menu = () => {
           <Link to="/friends" onClick={handleClick('/friends')}>
               {currentPath === '/friends' ? <FriendsIconTwoMenu /> :  <FriendsIconOneMenu />}
               <span className="Name">
-                Friends
+                Friens
               </span>
           </Link>
         </div>
@@ -59,7 +59,7 @@ const Menu = () => {
           <Link to="/profile" onClick={handleClick('/profile')}>
             {currentPath === '/profile' ? <ProfileTwo /> : <ProfileOne />}
             <span className="Name">
-              Profile
+              You
             </span>
           </Link>
         </div>

@@ -19,7 +19,7 @@ const App = () => {
     const [loaderCompleted, setLoaderCompleted] = useState(false);
     const adIntervalRef = useRef(null);
 
-    // Оригинальный useEffect для Telegram WebApp
+    // Инициализация Telegram WebApp
     useEffect(() => {
         console.log("App.jsx: useEffect triggered");
 
@@ -36,7 +36,7 @@ const App = () => {
                 const webApp = window.Telegram.WebApp;
                 console.log("Telegram WebApp detected, initializing...");
                 
-                // Fullscreen mode логика из другого файла
+                // Fullscreen mode логика
                 webApp.expand();
                 webApp.requestFullscreen();
                 webApp.isVerticalSwipesEnabled = false;
@@ -51,6 +51,8 @@ const App = () => {
                 
                 console.log("Telegram WebApp initialized successfully");
                 setTelegramReady(true);
+                setIsActive(webApp.isActive);
+                
             } catch (error) {
                 console.error("Error initializing Telegram WebApp:", error);
                 setTelegramReady(true);
@@ -68,7 +70,7 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        if (['/', '/friends'].includes(location.pathname)) {
+        if (['/', '/friends', '/tasks', '/profile', '/gifts'].includes(location.pathname)) {
             document.body.classList.add('no-scroll');
         } else {
             document.body.classList.remove('no-scroll');
@@ -79,6 +81,7 @@ const App = () => {
         };
     }, [location.pathname]);
 
+    // Аутентификация пользователя
     useEffect(() => {
         if (telegramReady) {
             console.log("App.jsx: Starting authentication check");
