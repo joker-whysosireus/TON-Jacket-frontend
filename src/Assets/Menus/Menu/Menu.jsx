@@ -23,12 +23,12 @@ const Menu = () => {
 
   return (
       <div className="menu">
-        <div className={`menu-item ${currentPath === '/' ? 'active' : ''}`}>
-          <Link to="/" onClick={handleClick('/')}>
-            {currentPath === '/' ? <HomeIconTwoMenu /> : <HomeIconOneMenu />}
-            <span className="Name">
-              Slots
-            </span>
+        <div className={`menu-item ${currentPath === '/friends' ? 'active' : ''}`}>
+          <Link to="/friends" onClick={handleClick('/friends')}>
+              {currentPath === '/friends' ? <FriendsIconTwoMenu /> :  <FriendsIconOneMenu />}
+              <span className="Name">
+                Friens
+              </span>
           </Link>
         </div>
          <div className={`menu-item ${currentPath === '/gifts' ? 'active' : ''}`}>
@@ -39,12 +39,12 @@ const Menu = () => {
             </span>
           </Link>
         </div>
-        <div className={`menu-item ${currentPath === '/friends' ? 'active' : ''}`}>
-          <Link to="/friends" onClick={handleClick('/friends')}>
-              {currentPath === '/friends' ? <FriendsIconTwoMenu /> :  <FriendsIconOneMenu />}
-              <span className="Name">
-                Friens
-              </span>
+        <div className={`menu-item ${currentPath === '/' ? 'active' : ''}`}>
+          <Link to="/" onClick={handleClick('/')}>
+            {currentPath === '/' ? <HomeIconTwoMenu /> : <HomeIconOneMenu />}
+            <span className="Name">
+              Slots
+            </span>
           </Link>
         </div>
         <div className={`menu-item ${currentPath === '/tasks' ? 'active' : ''}`}>
@@ -59,7 +59,7 @@ const Menu = () => {
           <Link to="/profile" onClick={handleClick('/profile')}>
             {currentPath === '/profile' ? <ProfileTwo /> : <ProfileOne />}
             <span className="Name">
-              You
+              User
             </span>
           </Link>
         </div>
