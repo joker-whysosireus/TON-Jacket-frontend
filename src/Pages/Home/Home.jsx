@@ -128,7 +128,7 @@ function Home({ userData, updateUserData, isActive }) {
       
       if (!telegramUserId) {
         console.error('❌ No telegram user ID found');
-        return false;
+        return { success: false, error: 'No telegram user ID found' };
       }
 
       console.log('📤 Sending bet update request:', {
@@ -144,7 +144,7 @@ function Home({ userData, updateUserData, isActive }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          telegramUserId: telegramUserId,
+          telegramUserId: telegramUserId, // Исправлено: telegramUserId вместо telegramId
           betAmount: parseFloat(amount.toFixed(3))
         }),
       });
@@ -163,25 +163,25 @@ function Home({ userData, updateUserData, isActive }) {
         if (updateUserData) {
           await updateUserData();
         }
-        return true;
+        return { success: true };
       } else {
         console.error('❌ Error from update-bet function:', data.error);
-        return false;
+        return { success: false, error: data.error };
       }
     } catch (error) {
       console.error('❌ Error updating bet amount:', error);
-      return false;
+      return { success: false, error: error.message };
     }
   }, [safeUserData, updateUserData]);
 
   // Функция для увеличения coins в базе данных
-  const updateCoinsInDB = useCallback(async (coinsToAdd = 100) => {
+  const updateCoinsInDB = useCallback(async (coinsToAdd = 50) => {
     try {
       const telegramUserId = safeUserData?.telegram_user_id;
       
       if (!telegramUserId) {
         console.error('❌ No telegram user ID found');
-        return false;
+        return { success: false, error: 'No telegram user ID found' };
       }
 
       console.log('📤 Sending coins update request:', {
@@ -216,31 +216,35 @@ function Home({ userData, updateUserData, isActive }) {
         if (updateUserData) {
           await updateUserData();
         }
-        return true;
+        return { success: true };
       } else {
         console.error('❌ Error from update-coins function:', data.error);
-        return false;
+        return { success: false, error: data.error };
       }
     } catch (error) {
       console.error('❌ Error updating coins:', error);
-      return false;
+      return { success: false, error: error.message };
     }
   }, [safeUserData, updateUserData]);
 
   // Функция для обновления TON баланса в базе данных
-  const updateTonAmountInDB = useCallback(async (tonAmount) => {
+  const updateTonAmountInDB = useCallback(async (tonChange) => {
     try {
       const telegramUserId = safeUserData?.telegram_user_id;
       
       if (!telegramUserId) {
         console.error('❌ No telegram user ID found');
-        return false;
+        return { success: false, error: 'No telegram user ID found' };
       }
 
       console.log('📤 Sending TON update request:', {
         telegramUserId,
-        tonAmount
+        tonChange
       });
+
+      // Сначала получаем текущий баланс
+      const currentTonAmount = safeUserData.ton_amount;
+      const newTonAmount = parseFloat((currentTonAmount + tonChange).toFixed(3));
 
       const UPDATE_TON_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/update-ton';
       
@@ -251,7 +255,7 @@ function Home({ userData, updateUserData, isActive }) {
         },
         body: JSON.stringify({
           telegramId: telegramUserId,
-          tonAmount: parseFloat(tonAmount.toFixed(3))
+          tonAmount: newTonAmount // Отправляем абсолютное значение
         }),
       });
 
@@ -269,14 +273,14 @@ function Home({ userData, updateUserData, isActive }) {
         if (updateUserData) {
           await updateUserData();
         }
-        return true;
+        return { success: true, newTonAmount };
       } else {
         console.error('❌ Error from update-ton function:', data.error);
-        return false;
+        return { success: false, error: data.error };
       }
     } catch (error) {
       console.error('❌ Error updating TON amount:', error);
-      return false;
+      return { success: false, error: error.message };
     }
   }, [safeUserData, updateUserData]);
 
@@ -302,18 +306,6 @@ function Home({ userData, updateUserData, isActive }) {
     return [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
   }, [getRandomSymbol]);
 
-  // Balance management
-  const addBalance = useCallback((type, amount) => {
-    if (updateUserData && safeUserData) {
-      const newData = {
-        ...safeUserData,
-        [type === 'ton' ? 'ton_amount' : 'coins']: 
-          parseFloat((safeUserData[type === 'ton' ? 'ton_amount' : 'coins'] + amount).toFixed(3))
-      };
-      updateUserData(newData);
-    }
-  }, [safeUserData, updateUserData]);
-
   // Confetti animation
   const startConfetti = useCallback(() => {
     setShowConfetti(true);
@@ -328,13 +320,12 @@ function Home({ userData, updateUserData, isActive }) {
     }, 4000);
   }, []);
 
-  // Обработчик нажатия на кнопку Spin - ОПРЕДЕЛЯЕМ СИМВОЛЫ ДО СТАВКИ
+  // Обработчик нажатия на кнопку Spin
   const handleSpinClick = useCallback(() => {
     console.log('🔄 Кнопка Spin нажата');
     if (isSpinning || selectedOption === 'gifts') return;
     
     if (selectedOption === 'ton') {
-      // Генерируем символы для следующего вращения ДО открытия модального окна
       const symbols = generateNextSpinSymbols();
       console.log('🎯 ПРЕДОПРЕДЕЛЕННЫЕ СИМВОЛЫ:', symbols);
       setNextSpinSymbols(symbols);
@@ -358,20 +349,12 @@ function Home({ userData, updateUserData, isActive }) {
         setIsSpinning(false);
         return;
       }
-      
-      // Локально вычитаем ставку из баланса
-      if (updateUserData) {
-        updateUserData(prevData => ({
-          ...prevData,
-          ton_amount: parseFloat((prevData.ton_amount - betAmount).toFixed(3))
-        }));
-      }
     }
 
-    // Обновляем bet_amount в базе данных
-    let betUpdated = await updateBetAmountInDB(betAmount);
-    if (!betUpdated) {
-      setBetResult('Error updating bet. Please try again.');
+    // 1. Обновляем bet_amount в базе данных (увеличиваем на сумму ставки)
+    const betResult = await updateBetAmountInDB(betAmount);
+    if (!betResult.success) {
+      setBetResult('Error updating bet: ' + betResult.error);
       setIsSpinning(false);
       return;
     }
@@ -381,7 +364,6 @@ function Home({ userData, updateUserData, isActive }) {
     const symbolChangeInterval = 100;
     let elapsedTime = 0;
     
-    // Сохраняем ссылку на анимацию для возможности отмены
     animationRef.current = setInterval(() => {
       elapsedTime += symbolChangeInterval;
       
@@ -401,34 +383,26 @@ function Home({ userData, updateUserData, isActive }) {
         
         if (winCombination) {
           if (winCombination.multiplier === 0) {
+            // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
             setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
-            // При проигрыше просто обновляем TON баланс в базе данных (ставка уже вычтена локально)
-            updateTonAmountInDB(safeUserData.ton_amount - betAmount);
+            updateTonAmountInDB(-betAmount);
           } else {
+            // ВЫИГРЫШ - увеличиваем TON баланс на (выигрыш - ставка)
             const winAmount = winCombination.multiplier * betAmount;
+            const netWin = winAmount - betAmount; // Чистый выигрыш
             setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
             
-            // При выигрыше обновляем TON баланс в базе данных (добавляем выигрыш к уже вычтенной ставке)
-            const newTonAmount = safeUserData.ton_amount - betAmount + winAmount;
-            updateTonAmountInDB(newTonAmount);
-            
-            // Локально обновляем баланс
-            if (updateUserData) {
-              updateUserData(prevData => ({
-                ...prevData,
-                ton_amount: parseFloat(newTonAmount.toFixed(3))
-              }));
-            }
+            updateTonAmountInDB(netWin);
             startConfetti();
           }
         } else {
+          // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
           setBetResult('No win this time. Try again!');
-          // При проигрыше просто обновляем TON баланс в базе данных (ставка уже вычтена локально)
-          updateTonAmountInDB(safeUserData.ton_amount - betAmount);
+          updateTonAmountInDB(-betAmount);
         }
         
-        // Увеличиваем coins после прокрутки
-        updateCoinsInDB(100);
+        // 3. Увеличиваем coins на 50 после прокрутки
+        updateCoinsInDB(50);
         
         // Сбрасываем предопределенные символы
         setNextSpinSymbols(null);
@@ -466,7 +440,6 @@ function Home({ userData, updateUserData, isActive }) {
 
   const handleCloseBetModal = useCallback(() => {
     setShowBetModal(false);
-    // При закрытии модалки сбрасываем предопределенные символы
     setNextSpinSymbols(null);
   }, []);
 
@@ -567,10 +540,8 @@ function Home({ userData, updateUserData, isActive }) {
 
       <BalanceSection 
         userData={safeUserData} 
-        onAddBalance={addBalance} 
       />
 
-      {/* Слот-машина остается в Home */}
       <div className="slot-machine">
         <div className="slot-reels">
           {[0, 1, 2].map((index) => (
@@ -591,7 +562,6 @@ function Home({ userData, updateUserData, isActive }) {
 
       <BetResultAndInstruction betResult={betResult} />
 
-      {/* Кнопки остаются в Home */}
       <button 
         className="instructions-button"
         onClick={handleInstructionsClick}
