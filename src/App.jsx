@@ -8,7 +8,7 @@ import Loader from './Assets/Loader/Loader.jsx';
 import Profile from './Pages/Profile/Profile.jsx'
 import Gifts from './Pages/Gifts/Gifts.jsx';
 
-const AUTH_FUNCTION_URL = 'https://giftsblocksbackend.store/.netlify/functions/auth';
+const AUTH_FUNCTION_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/auth';
 
 const App = () => {
     const location = useLocation();

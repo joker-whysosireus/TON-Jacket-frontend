@@ -1,249 +1,100 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Confetti from 'react-confetti';
 import Menu from '../../Assets/Menus/Menu/Menu';
-import TonLogo from './TonLogo.png';
-import gold from './gold.png';
+import BalanceSection from './Components/Balance/BalanceSection';
+import BetResultAndInstruction from './Components/BetResultAndInstruction/BetResultAndInstruction';
+import BetModal from './Components/Modals/BetModal';
+import InstructionsModal from './Components/Modals/InstructionsModal';
+
 import './Home.css';
 
+// Константы
 const SYMBOLS_CONFIG = [
-  { symbol: '🍒', name: 'Cherry', weight: 35 },
-  { symbol: '🍋', name: 'Lemon', weight: 30 },
-  { symbol: '🍊', name: 'Orange', weight: 25 },
-  { symbol: '🍉', name: 'Watermelon', weight: 20 },
-  { symbol: '🔔', name: 'Bell', weight: 18 },
-  { symbol: '⭐', name: 'Star', weight: 15 },
-  { symbol: '🍇', name: 'Grapes', weight: 12 },
-  { symbol: '🔶', name: 'Diamond', weight: 10 },
-  { symbol: '⑦', name: 'Seven', weight: 8 },
-  { symbol: '💎', name: 'Diamond', weight: 6 },
-  { symbol: '👑', name: 'Crown', weight: 4 },
-  { symbol: '💀', name: 'Skull', weight: 2 },
-  { symbol: '🔥', name: 'Fire', weight: 1 }
+  { id: 1, symbol: '🍒', name: 'Cherry', weight: 35, type: 'fruit' },
+  { id: 2, symbol: '🍋', name: 'Lemon', weight: 30, type: 'fruit' },
+  { id: 3, symbol: '🍊', name: 'Orange', weight: 25, type: 'fruit' },
+  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 20, type: 'fruit' },
+  { id: 5, symbol: '🔔', name: 'Bell', weight: 18, type: 'bell' },
+  { id: 6, symbol: '⭐', name: 'Star', weight: 15, type: 'star' },
+  { id: 7, symbol: '🍇', name: 'Grapes', weight: 12, type: 'fruit' },
+  { id: 8, symbol: '🔶', name: 'Diamond', weight: 10, type: 'diamond' },
+  { id: 9, symbol: '⑦', name: 'Seven', weight: 8, type: 'seven' },
+  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 6, type: 'premium' },
+  { id: 11, symbol: '👑', name: 'Crown', weight: 4, type: 'premium' },
+  { id: 12, symbol: '💀', name: 'Skull', weight: 2, type: 'skull' },
+  { id: 13, symbol: '🔥', name: 'Fire', weight: 1, type: 'special' }
 ];
 
-const PAYTABLE = {
-  '💎,💎,💎': { multiplier: 200, name: 'DIAMOND JACKPOT' },
-  '👑,👑,👑': { multiplier: 100, name: 'CROWN JACKPOT' },
-  '🔥,🔥,🔥': { multiplier: 75, name: 'FIRE BONUS' },
-  '⑦,⑦,⑦': { multiplier: 50, name: 'TRIPLE SEVEN' },
-  '🔶,🔶,🔶': { multiplier: 40, name: 'TRIPLE DIAMOND' },
-  '🔔,🔔,🔔': { multiplier: 30, name: 'TRIPLE BELL' },
-  '⭐,⭐,⭐': { multiplier: 25, name: 'TRIPLE STAR' },
-  '🍇,🍇,🍇': { multiplier: 20, name: 'TRIPLE GRAPES' },
-  '🍉,🍉,🍉': { multiplier: 15, name: 'TRIPLE WATERMELON' },
-  '🍊,🍊,🍊': { multiplier: 10, name: 'TRIPLE ORANGE' },
-  '🍋,🍋,🍋': { multiplier: 8, name: 'TRIPLE LEMON' },
-  '🍒,🍒,🍒': { multiplier: 5, name: 'TRIPLE CHERRY' },
-  '💀,💀,💀': { multiplier: 0, name: 'SKULL BUST' },
-  '💎,💎,⭐': { multiplier: 15, name: 'DIAMOND BONUS' },
-  '👑,👑,⭐': { multiplier: 12, name: 'CROWN BONUS' },
-  '⑦,⑦,⭐': { multiplier: 10, name: 'SEVEN BONUS' },
-  '🔔,🔔,⭐': { multiplier: 8, name: 'BELL BONUS' },
-  '💎,⭐,⭐': { multiplier: 6, name: 'STAR DIAMOND' },
-  '👑,⭐,⭐': { multiplier: 5, name: 'STAR CROWN' },
-  '⑦,⭐,⭐': { multiplier: 4, name: 'STAR SEVEN' },
-  '🍒,🍒,🍋': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍒,🍒,🍊': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍒,🍒,🍉': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍒,🍒,🔔': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍒,🍒,⭐': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍒,🍒,🍇': { multiplier: 3, name: 'DOUBLE CHERRY' },
-  '🍋,🍋,🍊': { multiplier: 2.5, name: 'LEMON ORANGE' },
-  '🍊,🍊,🍋': { multiplier: 2.5, name: 'ORANGE LEMON' },
-  '🍉,🍉,🍇': { multiplier: 2.5, name: 'WATERMELON GRAPES' },
-  '🔔,🔔,⭐': { multiplier: 4, name: 'BELL STAR' },
-  '⭐,⭐,🔔': { multiplier: 4, name: 'STAR BELL' },
-  '🍒,🍋,🍊': { multiplier: 1.5, name: 'FRUIT MIX' },
-  '🍋,🍊,🍒': { multiplier: 1.5, name: 'FRUIT MIX' },
-  '🍊,🍒,🍋': { multiplier: 1.5, name: 'FRUIT MIX' },
-  '🍒,🍉,🍇': { multiplier: 1.5, name: 'FRUIT MIX' },
-  '🍇,🍒,🍉': { multiplier: 1.5, name: 'FRUIT MIX' },
-  '🍒,🍒': { multiplier: 2, name: 'DOUBLE CHERRY' },
-  '💎,💎': { multiplier: 8, name: 'DIAMOND PAIR' },
-  '👑,👑': { multiplier: 6, name: 'CROWN PAIR' },
-  '⑦,⑦': { multiplier: 4, name: 'SEVEN PAIR' },
-  '🔶,🔶': { multiplier: 3, name: 'DIAMOND PAIR' },
-  '🔔,🔔': { multiplier: 2.5, name: 'BELL PAIR' },
-  '⭐,⭐': { multiplier: 2, name: 'STAR PAIR' },
-  '🍒,⭐': { multiplier: 1.2, name: 'CHERRY STAR' },
-  '🍒,🔔': { multiplier: 1.2, name: 'CHERRY BELL' },
-  '🍒,🍇': { multiplier: 1.1, name: 'CHERRY GRAPES' },
-  '🍒,🍉': { multiplier: 1.1, name: 'CHERRY WATERMELON' }
+const getWinForCombination = (symbols) => {
+  const [a, b, c] = symbols;
+  
+  console.log('🎰 Проверка выигрыша для комбинации:', symbols.join(' '));
+  
+  // 1. ТРОЙНЫЕ КОМБИНАЦИИ
+  if (a === b && b === c) {
+    const tripleWins = {
+      '🍒': { multiplier: 5, name: 'TRIPLE CHERRY' },
+      '🍋': { multiplier: 8, name: 'TRIPLE LEMON' },
+      '🍊': { multiplier: 10, name: 'TRIPLE ORANGE' },
+      '🍉': { multiplier: 15, name: 'TRIPLE WATERMELON' },
+      '🔔': { multiplier: 30, name: 'TRIPLE BELL' },
+      '⭐': { multiplier: 25, name: 'TRIPLE STAR' },
+      '🍇': { multiplier: 20, name: 'TRIPLE GRAPES' },
+      '🔶': { multiplier: 40, name: 'TRIPLE DIAMOND' },
+      '⑦': { multiplier: 50, name: 'TRIPLE SEVEN' },
+      '💎': { multiplier: 200, name: 'DIAMOND JACKPOT' },
+      '👑': { multiplier: 100, name: 'CROWN JACKPOT' },
+      '💀': { multiplier: 0, name: 'SKULL BUST' },
+      '🔥': { multiplier: 75, name: 'FIRE BONUS' }
+    };
+    return tripleWins[a] || null;
+  }
+  
+  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ
+  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 15, name: 'DIAMOND STAR' };
+  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 12, name: 'CROWN STAR' };
+  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 10, name: 'SEVEN STAR' };
+  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 8, name: 'BELL STAR' };
+  
+  // 3. ДВОЙНЫЕ КОМБИНАЦИИ
+  if (a === b || a === c || b === c) {
+    let doubleSymbol;
+    if (a === b) doubleSymbol = a;
+    else if (a === c) doubleSymbol = a;
+    else doubleSymbol = b;
+    
+    const doubleWins = {
+      '🍒': { multiplier: 2, name: 'DOUBLE CHERRY' },
+      '🍋': { multiplier: 2, name: 'DOUBLE LEMON' },
+      '🍊': { multiplier: 2, name: 'DOUBLE ORANGE' },
+      '🍉': { multiplier: 2, name: 'DOUBLE WATERMELON' },
+      '🔔': { multiplier: 2.5, name: 'DOUBLE BELL' },
+      '⭐': { multiplier: 2, name: 'DOUBLE STAR' },
+      '🍇': { multiplier: 2, name: 'DOUBLE GRAPES' },
+      '🔶': { multiplier: 3, name: 'DOUBLE DIAMOND' },
+      '⑦': { multiplier: 4, name: 'DOUBLE SEVEN' },
+      '💎': { multiplier: 8, name: 'DOUBLE PREMIUM DIAMOND' },
+      '👑': { multiplier: 6, name: 'DOUBLE CROWN' },
+      '💀': { multiplier: 0, name: 'DOUBLE SKULL' },
+      '🔥': { multiplier: 5, name: 'DOUBLE FIRE' }
+    };
+    
+    return doubleWins[doubleSymbol] || null;
+  }
+  
+  // 4. ФРУКТОВЫЕ МИКСЫ
+  const fruits = ['🍒', '🍋', '🍊', '🍉', '🍇'];
+  const isAllFruits = fruits.includes(a) && fruits.includes(b) && fruits.includes(c);
+  const uniqueFruits = new Set([a, b, c]);
+  
+  if (isAllFruits && uniqueFruits.size === 3) {
+    return { multiplier: 1.5, name: 'FRUIT MIX' };
+  }
+  
+  return null;
 };
 
-const GIFTS_TABLE = {
-  '💎,💎,💎': { gift: 'Premium Smartphone', value: '💰 High Value' },
-  '👑,👑,👑': { gift: 'Gaming Console', value: '💰 High Value' },
-  '🔥,🔥,🔥': { gift: 'Smart TV', value: '💰 High Value' },
-  '⑦,⑦,⑦': { gift: 'Wireless Headphones', value: '💰 Medium Value' },
-  '🔶,🔶,🔶': { gift: 'Smart Watch', value: '💰 Medium Value' },
-  '🔔,🔔,🔔': { gift: 'Tablet', value: '💰 Medium Value' },
-  '⭐,⭐,⭐': { gift: 'Bluetooth Speaker', value: '💰 Medium Value' },
-  '🍇,🍇,🍇': { gift: 'Fitness Tracker', value: '💰 Medium Value' },
-  '🍉,🍉,🍉': { gift: 'Gift Card $100', value: '💰 Medium Value' },
-  '🍊,🍊,🍊': { gift: 'Gift Card $50', value: '💰 Low Value' },
-  '🍋,🍋,🍋': { gift: 'Branded T-Shirt', value: '💰 Low Value' },
-  '🍒,🍒,🍒': { gift: 'Coffee Mug', value: '💰 Low Value' },
-  '💎,💎,⭐': { gift: 'Power Bank', value: '💰 Medium Value' },
-  '👑,👑,⭐': { gift: 'Phone Case', value: '💰 Low Value' },
-  '🍒,🍒,⭐': { gift: 'Sticker Pack', value: '💰 Small Value' },
-  '🍒,🍒': { gift: 'Keychain', value: '💰 Small Value' },
-  '💎,💎': { gift: 'Wireless Earbuds', value: '💰 Medium Value' },
-  '👑,👑': { gift: 'Backpack', value: '💰 Medium Value' }
-};
-
-function TonLogoIcon({ size = 20, className = "" }) {
-  return (
-    <img 
-      src={TonLogo} 
-      alt="TON" 
-      className={`ton-logo ${className}`}
-      style={{ 
-        width: size, 
-        height: size,
-      }} 
-    />
-  );
-}
-
-function GoldIcon({ size = 20, className = "" }) {
-  return (
-    <img 
-      src={GoldIcon} 
-      alt="Gold" 
-      className={`gold-icon ${className}`}
-      style={{ 
-        width: size, 
-        height: size,
-      }} 
-    />
-  );
-}
-
-// Separate BetModal component to prevent re-renders
-const BetModal = ({ 
-  showBetModal, 
-  betAmount, 
-  balance, 
-  onClose, 
-  onConfirm, 
-  onBetChange 
-}) => {
-  if (!showBetModal) return null;
-
-  const isConfirmDisabled = betAmount <= 0 || betAmount > balance.ton;
-  const quickBetAmounts = [0.1, 0.5, 1, 2, 5, 10];
-
-  const handleButtonClick = (amount, e) => {
-    e.stopPropagation();
-    onBetChange(amount);
-  };
-
-  const handleConfirm = (e) => {
-    e.stopPropagation();
-    onConfirm();
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>🚀 Place Your Bet</h2>
-          <span className="modal-close" onClick={onClose}>×</span>
-        </div>
-        <div className="modal-body">
-          <div className="bet-amount-display">
-            <div className="bet-amount-label">Your Bet Amount</div>
-            <div className="bet-amount-value">
-              <TonLogoIcon size={50} className="ton-logo-modal" />
-              {betAmount.toFixed(2)}
-            </div>
-            <div className="balance-info">
-              <div className="balance-label">Available Balance:</div>
-              <div className="balance-amount">
-                <TonLogoIcon size={20} />
-                {balance.ton.toFixed(2)}
-              </div>
-            </div>
-          </div>
-
-          <div className="quick-bet-buttons">
-            <div className="quick-bet-label">Quick Bet Amounts:</div>
-            <div className="quick-bet-grid">
-              {quickBetAmounts.map((amount) => (
-                <button
-                  key={amount}
-                  className={`quick-bet-btn ${betAmount === amount ? 'active' : ''}`}
-                  onClick={(e) => handleButtonClick(amount, e)}
-                >
-                  {amount} TON
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bet-modal-actions">
-            <button 
-              className="bet-confirm-btn"
-              onClick={handleConfirm}
-              disabled={isConfirmDisabled}
-            >
-              Confirm Bet & Spin
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Separate InstructionsModal component
-const InstructionsModal = ({ showInstructions, onClose }) => {
-  if (!showInstructions) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>🎰 How to Play</h2>
-          <span className="modal-close" onClick={onClose}>×</span>
-        </div>
-        <div className="modal-body">
-          <div className="instructions-list">
-            <div className="instruction-item">
-              <strong>1. Choose your game mode:</strong>
-              <ul>
-                <li><strong>Spin on TON:</strong> Play with TON cryptocurrency</li>
-                <li><strong>Spin on Gifts:</strong> Play for gifts and prizes</li>
-              </ul>
-            </div>
-            <div className="instruction-item">
-              <strong>2. Place your bet:</strong>
-              <p>Select your bet amount and click SPIN to start the reels</p>
-            </div>
-            <div className="instruction-item">
-              <strong>3. Winning combinations (TON Mode):</strong>
-              <div className="combinations-grid">
-                {Object.entries(PAYTABLE).map(([combo, data]) => (
-                  <div key={combo} className="combination-item">
-                    <span className="combo-symbols">{combo}</span>
-                    <span className="combo-prize">
-                      {data.multiplier === 0 ? 'BUST' : 
-                       data.multiplier === 200 ? 'JACKPOT' : 
-                       `x${data.multiplier}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-function Home() {
+function Home({ userData, updateUserData, isActive }) {
   const [selectedOption, setSelectedOption] = useState('ton');
   const [isSpinning, setIsSpinning] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -251,96 +102,136 @@ function Home() {
   const [betResult, setBetResult] = useState('Welcome! Place your bet and spin!');
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiOpacity, setConfettiOpacity] = useState(1);
-  const [balance, setBalance] = useState({ ton: 100, coins: 500 });
   const [betAmount, setBetAmount] = useState(0.1);
   const [windowDimensions, setWindowDimensions] = useState({ 
     width: window.innerWidth, 
     height: window.innerHeight 
   });
-  const [currentSymbols, setCurrentSymbols] = useState(['🍒', '🍒', '🍒']);
   
-  const reelsRef = [useRef(null), useRef(null), useRef(null)];
-  const reelStripsRef = [useRef(null), useRef(null), useRef(null)];
+  const [currentSymbols, setCurrentSymbols] = useState(['🍒', '🍒', '🍒']);
+  const [nextSpinSymbols, setNextSpinSymbols] = useState(null);
+  
+  const animationRef = useRef(null);
 
-  // Load symbols from localStorage
-  useEffect(() => {
-    const savedSymbols = localStorage.getItem('slotMachineSymbols');
-    if (savedSymbols) {
-      try {
-        const parsedSymbols = JSON.parse(savedSymbols);
-        if (Array.isArray(parsedSymbols) && parsedSymbols.length === 3) {
-          setCurrentSymbols(parsedSymbols);
-        }
-      } catch (error) {
-        console.error('Error loading saved symbols:', error);
+  const safeUserData = userData || {
+    ton_amount: 100.000,
+    coins: 500.000,
+    telegram_user_id: null,
+    first_name: 'User',
+    username: 'user'
+  };
+
+  // Функция для увеличения bet_amount в базе данных
+  const updateBetAmountInDB = async (amount) => {
+    try {
+      const telegramUserId = safeUserData?.telegram_user_id;
+      
+      if (!telegramUserId) {
+        console.error('No telegram user ID found');
+        return false;
       }
-    }
-  }, []);
 
-  // Save symbols to localStorage
-  useEffect(() => {
-    localStorage.setItem('slotMachineSymbols', JSON.stringify(currentSymbols));
-  }, [currentSymbols]);
-
-  // Update window dimensions
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight
+      const response = await fetch('/.netlify/functions/update-bet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          telegramUserId: telegramUserId,
+          betAmount: amount
+        }),
       });
-    };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Block scroll when modals are open
-  useEffect(() => {
-    if (showInstructions || showBetModal) {
-      document.body.classList.add('no-scroll');
-    } else {
-      document.body.classList.remove('no-scroll');
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Bet amount updated successfully');
+        if (updateUserData) {
+          await updateUserData();
+        }
+        return true;
+      } else {
+        console.error('Error updating bet amount:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating bet amount:', error);
+      return false;
     }
+  };
 
-    return () => {
-      document.body.classList.remove('no-scroll');
-    };
-  }, [showInstructions, showBetModal]);
+  // Функция для увеличения coins в базе данных
+  const updateCoinsInDB = async (coinsToAdd = 100) => {
+    try {
+      const telegramUserId = safeUserData?.telegram_user_id;
+      
+      if (!telegramUserId) {
+        console.error('No telegram user ID found');
+        return false;
+      }
+
+      const response = await fetch('/.netlify/functions/update-coins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          telegramUserId: telegramUserId,
+          coinsToAdd: coinsToAdd
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Coins updated successfully');
+        if (updateUserData) {
+          await updateUserData();
+        }
+        return true;
+      } else {
+        console.error('Error updating coins:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating coins:', error);
+      return false;
+    }
+  };
 
   // Create symbols pool with weights
-  const symbolsPool = [];
-  SYMBOLS_CONFIG.forEach(symbolConfig => {
-    for (let i = 0; i < symbolConfig.weight; i++) {
-      symbolsPool.push(symbolConfig.symbol);
-    }
-  });
+  const symbolsPool = useCallback(() => {
+    const pool = [];
+    SYMBOLS_CONFIG.forEach(symbolConfig => {
+      for (let i = 0; i < symbolConfig.weight; i++) {
+        pool.push(symbolConfig.symbol);
+      }
+    });
+    return pool;
+  }, []);
 
   const getRandomSymbol = useCallback(() => {
-    const randomIndex = Math.floor(Math.random() * symbolsPool.length);
-    return symbolsPool[randomIndex];
+    const pool = symbolsPool();
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    return pool[randomIndex];
   }, [symbolsPool]);
+
+  // Генерация случайных символов для следующего вращения
+  const generateNextSpinSymbols = useCallback(() => {
+    return [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
+  }, [getRandomSymbol]);
 
   // Balance management
   const addBalance = useCallback((type, amount) => {
-    setBalance(prev => ({
-      ...prev,
-      [type]: prev[type] + amount
-    }));
-  }, []);
-
-  // Create reel strip
-  const createReelStrip = useCallback((finalSymbol = null) => {
-    const strip = [];
-    for (let i = 0; i < 15; i++) {
-      if (i === 7 && finalSymbol) {
-        strip.push(finalSymbol);
-      } else {
-        strip.push(getRandomSymbol());
-      }
+    if (updateUserData && safeUserData) {
+      const newData = {
+        ...safeUserData,
+        [type === 'ton' ? 'ton_amount' : 'coins']: 
+          parseFloat((safeUserData[type === 'ton' ? 'ton_amount' : 'coins'] + amount).toFixed(3))
+      };
+      updateUserData(newData);
     }
-    return strip;
-  }, [getRandomSymbol]);
+  }, [safeUserData, updateUserData]);
 
   // Confetti animation
   const startConfetti = useCallback(() => {
@@ -356,143 +247,132 @@ function Home() {
     }, 4000);
   }, []);
 
-  // Check winning combinations
-  const checkWinningCombinations = useCallback((results) => {
-    const resultString = results.join(',');
-    let winAmount = 0;
-    let winName = '';
-    let gift = null;
+  // Обработчик нажатия на кнопку Spin - ОПРЕДЕЛЯЕМ СИМВОЛЫ ДО СТАВКИ
+  const handleSpinClick = useCallback(() => {
+    console.log('🔄 Кнопка Spin нажата');
+    if (isSpinning || selectedOption === 'gifts') return;
     
-    // Check for three skulls first (bust)
-    if (results[0] === '💀' && results[1] === '💀' && results[2] === '💀') {
-      setBetResult('BUST! Three skulls - you lose your bet!');
-      return 0;
+    if (selectedOption === 'ton') {
+      // Генерируем символы для следующего вращения ДО открытия модального окна
+      const symbols = generateNextSpinSymbols();
+      console.log('🎯 ПРЕДОПРЕДЕЛЕННЫЕ СИМВОЛЫ:', symbols);
+      setNextSpinSymbols(symbols);
+      setShowBetModal(true);
     }
-    
-    if (selectedOption === 'ton' && PAYTABLE[resultString]) {
-      winAmount = PAYTABLE[resultString].multiplier * betAmount;
-      winName = PAYTABLE[resultString].name;
-    } else if (selectedOption === 'gifts' && GIFTS_TABLE[resultString]) {
-      gift = GIFTS_TABLE[resultString];
-      winName = gift.gift;
-    }
-    
-    // Check for two symbols in first two positions
-    if (results[0] === results[1] && PAYTABLE[`${results[0]},${results[1]}`]) {
-      const twoSymbolWin = PAYTABLE[`${results[0]},${results[1]}`];
-      if (twoSymbolWin.multiplier > winAmount) {
-        winAmount = twoSymbolWin.multiplier * betAmount;
-        winName = twoSymbolWin.name;
-      }
-    }
+  }, [isSpinning, selectedOption, generateNextSpinSymbols]);
 
-    // Check for single symbol combinations
-    if (results[0] === results[1] && results[1] === results[2] && PAYTABLE[`${results[0]},${results[1]}`]) {
-      const threeSymbolWin = PAYTABLE[`${results[0]},${results[1]},${results[2]}`];
-      if (threeSymbolWin && threeSymbolWin.multiplier > winAmount) {
-        winAmount = threeSymbolWin.multiplier * betAmount;
-        winName = threeSymbolWin.name;
-      }
-    }
-
-    if (winAmount > 0 || gift) {
-      if (selectedOption === 'ton') {
-        setBetResult(`WIN! ${winName} (${winAmount.toFixed(2)} TON)`);
-        setBalance(prev => ({ ...prev, ton: prev.ton + winAmount }));
-      } else {
-        setBetResult(`WIN! ${gift.gift}`);
-      }
-      
-      if (winAmount > 0) {
-        startConfetti();
-      }
-      return winAmount;
-    }
+  // ПРОСТАЯ АНИМАЦИЯ БЕЗ DOM MANIPULATION
+  const spinSlotMachine = useCallback(async () => {
+    if (isSpinning || !nextSpinSymbols) return;
     
-    setBetResult('No win this time. Try again!');
-    return 0;
-  }, [selectedOption, betAmount, startConfetti]);
-
-  // Spin slot machine
-  const spinSlotMachine = useCallback(() => {
-    if (isSpinning) return;
-    
+    console.log('🎮 НАЧАЛО ВРАЩЕНИЯ С ПРЕДОПРЕДЕЛЕННЫМИ СИМВОЛАМИ:', nextSpinSymbols);
     setIsSpinning(true);
     setBetResult('Spinning...');
     setShowConfetti(false);
 
+    // Обновляем bet_amount в базе данных
+    const betUpdated = await updateBetAmountInDB(betAmount);
+    if (!betUpdated) {
+      setBetResult('Error updating bet. Please try again.');
+      setIsSpinning(false);
+      return;
+    }
+
     if (selectedOption === 'ton') {
-      if (betAmount > balance.ton) {
+      if (betAmount > safeUserData.ton_amount) {
         setBetResult('Not enough TON for this bet!');
         setIsSpinning(false);
         return;
       }
-      setBalance(prev => ({ ...prev, ton: prev.ton - betAmount }));
+      if (updateUserData) {
+        updateUserData({
+          ...safeUserData,
+          ton_amount: parseFloat((safeUserData.ton_amount - betAmount).toFixed(3))
+        });
+      }
     }
 
-    const finalResults = [];
-    const spinDurations = [2000, 2200, 2400];
-
-    reelsRef.forEach((reel, index) => {
-      const reelElement = reel.current;
-      const stripElement = reelStripsRef[index].current;
-      if (!reelElement || !stripElement) return;
-
-      const finalSymbol = getRandomSymbol();
-      finalResults[index] = finalSymbol;
-
-      const strip = createReelStrip(finalSymbol);
-      
-      stripElement.innerHTML = strip.map(symbol => 
-        `<div class="symbol">${symbol}</div>`
-      ).join('');
-
-      stripElement.style.transition = 'none';
-      stripElement.style.transform = 'translateY(0)';
-
-      setTimeout(() => {
-        stripElement.style.transition = `transform ${spinDurations[index]}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-        stripElement.style.transform = `translateY(-700px)`;
-      }, 50);
-
-      setTimeout(() => {
-        stripElement.style.transition = 'transform 0.5s ease-out';
-        stripElement.style.transform = `translateY(-700px)`;
-
-        if (index === reelsRef.length - 1) {
-          setTimeout(() => {
-            checkWinningCombinations(finalResults);
-            setCurrentSymbols(finalResults);
-            setIsSpinning(false);
-          }, 600);
-        }
-      }, spinDurations[index]);
-    });
-  }, [isSpinning, selectedOption, betAmount, balance.ton, getRandomSymbol, createReelStrip, checkWinningCombinations]);
-
-  // Spin button handler
-  const handleSpinClick = useCallback(() => {
-    if (isSpinning) return;
+    // Простая анимация - просто меняем символы несколько раз
+    const spinDuration = 2000;
+    const symbolChangeInterval = 100;
+    let elapsedTime = 0;
     
-    if (selectedOption === 'ton') {
-      setShowBetModal(true);
-    } else {
-      spinSlotMachine();
-    }
-  }, [isSpinning, selectedOption, spinSlotMachine]);
+    // Сохраняем ссылку на анимацию для возможности отмены
+    animationRef.current = setInterval(() => {
+      elapsedTime += symbolChangeInterval;
+      
+      // Генерируем случайные символы для анимации
+      const randomSymbols = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
+      setCurrentSymbols(randomSymbols);
+      
+      if (elapsedTime >= spinDuration) {
+        // Завершаем анимацию и показываем ПРЕДОПРЕДЕЛЕННЫЕ символы
+        clearInterval(animationRef.current);
+        setCurrentSymbols(nextSpinSymbols);
+        
+        console.log('✅ АНИМАЦИЯ ЗАВЕРШЕНА, ПОКАЗЫВАЕМ ПРЕДОПРЕДЕЛЕННЫЕ СИМВОЛЫ:', nextSpinSymbols);
+        
+        // Проверяем выигрыш для ПРЕДОПРЕДЕЛЕННЫХ символов
+        const winCombination = getWinForCombination(nextSpinSymbols);
+        
+        if (winCombination) {
+          if (winCombination.multiplier === 0) {
+            setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
+          } else {
+            const winAmount = winCombination.multiplier * betAmount;
+            setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
+            
+            if (updateUserData) {
+              updateUserData({
+                ...safeUserData,
+                ton_amount: parseFloat((safeUserData.ton_amount + winAmount).toFixed(3))
+              });
+            }
+            startConfetti();
+          }
+        } else {
+          setBetResult('No win this time. Try again!');
+        }
+        
+        // Увеличиваем coins после прокрутки
+        updateCoinsInDB(100);
+        
+        // Сбрасываем предопределенные символы
+        setNextSpinSymbols(null);
+        setIsSpinning(false);
+      }
+    }, symbolChangeInterval);
+  }, [isSpinning, nextSpinSymbols, selectedOption, betAmount, safeUserData, updateUserData, getRandomSymbol, startConfetti]);
 
-  // Bet modal handlers
+  // Очистка анимации при размонтировании
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Обработчики кнопок
+  const handleInstructionsClick = useCallback(() => {
+    console.log('📖 Кнопка Instructions нажата');
+    setShowInstructions(true);
+  }, []);
+
   const handleCloseBetModal = useCallback(() => {
     setShowBetModal(false);
+    // При закрытии модалки сбрасываем предопределенные символы
+    setNextSpinSymbols(null);
   }, []);
 
   const handleBetConfirm = useCallback(() => {
+    console.log('✅ Подтверждение ставки с предопределенными символами:', nextSpinSymbols);
     if (betAmount <= 0) {
       setBetResult('Please select a valid bet amount');
       return;
     }
     
-    if (betAmount > balance.ton) {
+    if (betAmount > safeUserData.ton_amount) {
       setBetResult('Not enough TON for this bet!');
       return;
     }
@@ -501,14 +381,57 @@ function Home() {
     setTimeout(() => {
       spinSlotMachine();
     }, 300);
-  }, [betAmount, balance.ton, handleCloseBetModal, spinSlotMachine]);
+  }, [betAmount, safeUserData.ton_amount, handleCloseBetModal, spinSlotMachine, nextSpinSymbols]);
 
   const handleBetButtonClick = useCallback((amount) => {
+    console.log('💰 Изменение ставки на:', amount);
     setBetAmount(amount);
   }, []);
 
   const handleCloseInstructions = useCallback(() => {
     setShowInstructions(false);
+  }, []);
+
+  // Effect для блокировки скролла
+  useEffect(() => {
+    if (showInstructions || showBetModal) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+    return () => document.body.classList.remove('no-scroll');
+  }, [showInstructions, showBetModal]);
+
+  // Effect для обновления размеров окна
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Effect для сохранения символов
+  useEffect(() => {
+    localStorage.setItem('slotMachineSymbols', JSON.stringify(currentSymbols));
+  }, [currentSymbols]);
+
+  // Effect для загрузки символов
+  useEffect(() => {
+    const savedSymbols = localStorage.getItem('slotMachineSymbols');
+    if (savedSymbols) {
+      try {
+        const parsedSymbols = JSON.parse(savedSymbols);
+        if (Array.isArray(parsedSymbols) && parsedSymbols.length === 3) {
+          setCurrentSymbols(parsedSymbols);
+        }
+      } catch (error) {
+        console.error('Error loading saved symbols:', error);
+      }
+    }
   }, []);
 
   return (
@@ -537,60 +460,19 @@ function Home() {
         </div>
       )}
 
-      {/* Balance Section */}
-      <div className="balance-section">
-        <div className="balance-item">
-          <div className="balance-content">
-            <TonLogoIcon size={22} className="ton-logo-balance" />
-            <div className="balance-text-container">
-              <span className="balance-value">{balance.ton.toFixed(2)}</span>
-              <span className="balance-label">TON</span>
-            </div>
-          </div>
-          <button 
-            className="balance-add-btn"
-            onClick={() => addBalance('ton', 10)}
-            title="Add TON"
-          >
-            +
-          </button>
-        </div>
-        
-        <div className="balance-item">
-          <div className="balance-content">
-            <img src={gold} alt="Gold" className="gold-icon" style={{ width: 22, height: 22 }} />
-            <div className="balance-text-container">
-              <span className="balance-value">{balance.coins}</span>
-              <span className="balance-label">Coins</span>
-            </div>
-          </div>
-          <button 
-            className="balance-add-btn"
-            onClick={() => addBalance('coins', 100)}
-            title="Add Coins"
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <BalanceSection 
+        userData={safeUserData} 
+        onAddBalance={addBalance} 
+      />
 
-      {/* Slot Machine */}
+      {/* Слот-машина остается в Home */}
       <div className="slot-machine">
         <div className="slot-reels">
           {[0, 1, 2].map((index) => (
             <div key={index} className="reel-container">
-              <div 
-                ref={reelsRef[index]}
-                className="reel"
-                data-reel={index}
-              >
-                <div 
-                  ref={reelStripsRef[index]}
-                  className="reel-strip"
-                >
-                  {createReelStrip(currentSymbols[index]).map((symbol, i) => (
-                    <div key={i} className="symbol">{symbol}</div>
-                  ))}
+              <div className="reel">
+                <div className="reel-strip">
+                  <div className="symbol">{currentSymbols[index]}</div>
                 </div>
               </div>
             </div>
@@ -602,27 +484,16 @@ function Home() {
         <div className="slot-overlay"></div>
       </div>
 
-      {/* Bet Result Section */}
-      <div className="bet-result-section">
-        <div className="bet-result-text">
-          {betResult}
-        </div>
-      </div>
+      <BetResultAndInstruction betResult={betResult} />
 
-      {/* Instruction Text */}
-      <div className="instruction-text">
-        Choose what you will play for. Click "Instructions" to learn how to play and see winning combinations!
-      </div>
-
-      {/* Instructions Button */}
+      {/* Кнопки остаются в Home */}
       <button 
         className="instructions-button"
-        onClick={() => setShowInstructions(true)}
+        onClick={handleInstructionsClick}
       >
         📖 Instructions
       </button>
 
-      {/* Choice Buttons */}
       <div className="choice-buttons">
         <button 
           className={`choice-btn ${selectedOption === 'ton' ? 'active' : ''}`}
@@ -638,13 +509,14 @@ function Home() {
         </button>
       </div>
 
-      {/* Spin Button */}
       <button 
-        className={`spin-go-button ${isSpinning ? 'spinning' : ''}`}
+        className={`spin-go-button ${isSpinning ? 'spinning' : ''} ${selectedOption === 'gifts' ? 'coming-soon' : ''}`}
         onClick={handleSpinClick}
-        disabled={isSpinning}
+        disabled={isSpinning || selectedOption === 'gifts'}
       >
-        {isSpinning ? (
+        {selectedOption === 'gifts' ? (
+          'Coming soon'
+        ) : isSpinning ? (
           <>
             <div className="spinner"></div>
             Spinning...
@@ -654,7 +526,6 @@ function Home() {
         )}
       </button>
 
-      {/* Modals */}
       <InstructionsModal 
         showInstructions={showInstructions} 
         onClose={handleCloseInstructions} 
@@ -663,7 +534,7 @@ function Home() {
       <BetModal 
         showBetModal={showBetModal}
         betAmount={betAmount}
-        balance={balance}
+        userData={safeUserData}
         onClose={handleCloseBetModal}
         onConfirm={handleBetConfirm}
         onBetChange={handleBetButtonClick}

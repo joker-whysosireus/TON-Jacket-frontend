@@ -9,12 +9,13 @@
 
 .menu {
   position: fixed;
+  background: #000000;
   bottom: 7px; /* Подняли меню на 5px вверх */
   left: 0;
   right: 0;
   display: flex;
   justify-content: space-around;
-  padding: 10px 5px;
+  padding: 5px 5px;
   z-index: 1004;
 }
 

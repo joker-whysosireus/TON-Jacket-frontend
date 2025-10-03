@@ -1,0 +1,167 @@
+.slot-machine {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: var(--modal-bg);
+  border: 4px solid var(--secondary-color);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.7),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.slot-reels {
+  display: flex;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+}
+
+.reel-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 3px solid var(--modal-border);
+  position: relative;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.reel-container:last-child {
+  border-right: none;
+}
+
+.reel {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 3;
+}
+
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.reel-strip .symbol {
+  height: 140px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--text-color);
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  opacity: 1;
+  visibility: visible;
+}
+
+.slot-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 32%,
+    var(--modal-border) 32%,
+    var(--modal-border) 33%,
+    transparent 33%,
+    transparent 65%,
+    var(--modal-border) 65%,
+    var(--modal-border) 66%,
+    transparent 66%
+  );
+}
+
+.pay-line {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #ff4444 20%,
+    #ffff00 50%,
+    #ff4444 80%,
+    transparent 100%
+  );
+  transform: translateY(-50%);
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.7);
+  z-index: 5;
+}
+
+.slot-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: linear-gradient(
+    125deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+  border-radius: 16px;
+}
+
+@media (max-height: 670px) {
+  .slot-machine {
+    height: 120px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .reel-strip .symbol {
+    height: 90px;
+    font-size: 2.5rem;
+  }
+
+  .reel {
+    font-size: 2.2rem;
+  }
+
+  .pay-line {
+    height: 2px;
+  }
+}
+
+@media (min-height: 790px) and (max-height: 800px) {
+  .slot-machine {
+    height: 130px;
+  }
+}
+
+@media (min-height: 890px) and (max-height: 940px) {
+  .slot-machine {
+    height: 180px;
+  }
+}
