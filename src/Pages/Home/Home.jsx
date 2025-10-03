@@ -144,7 +144,7 @@ function Home({ userData, updateUserData, isActive }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          telegramUserId: telegramUserId, // Исправлено: telegramUserId вместо telegramId
+          telegramUserId: telegramUserId,
           betAmount: parseFloat(amount.toFixed(3))
         }),
       });
@@ -152,7 +152,8 @@ function Home({ userData, updateUserData, isActive }) {
       console.log('📥 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const data = await response.json();
@@ -160,9 +161,6 @@ function Home({ userData, updateUserData, isActive }) {
       
       if (data.success) {
         console.log('✅ Bet amount updated successfully');
-        if (updateUserData) {
-          await updateUserData();
-        }
         return { success: true };
       } else {
         console.error('❌ Error from update-bet function:', data.error);
@@ -172,7 +170,7 @@ function Home({ userData, updateUserData, isActive }) {
       console.error('❌ Error updating bet amount:', error);
       return { success: false, error: error.message };
     }
-  }, [safeUserData, updateUserData]);
+  }, [safeUserData]);
 
   // Функция для увеличения coins в базе данных
   const updateCoinsInDB = useCallback(async (coinsToAdd = 50) => {
@@ -205,7 +203,8 @@ function Home({ userData, updateUserData, isActive }) {
       console.log('📥 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const data = await response.json();
@@ -213,9 +212,6 @@ function Home({ userData, updateUserData, isActive }) {
       
       if (data.success) {
         console.log('✅ Coins updated successfully');
-        if (updateUserData) {
-          await updateUserData();
-        }
         return { success: true };
       } else {
         console.error('❌ Error from update-coins function:', data.error);
@@ -225,7 +221,7 @@ function Home({ userData, updateUserData, isActive }) {
       console.error('❌ Error updating coins:', error);
       return { success: false, error: error.message };
     }
-  }, [safeUserData, updateUserData]);
+  }, [safeUserData]);
 
   // Функция для обновления TON баланса в базе данных
   const updateTonAmountInDB = useCallback(async (tonChange) => {
@@ -242,10 +238,6 @@ function Home({ userData, updateUserData, isActive }) {
         tonChange
       });
 
-      // Сначала получаем текущий баланс
-      const currentTonAmount = safeUserData.ton_amount;
-      const newTonAmount = parseFloat((currentTonAmount + tonChange).toFixed(3));
-
       const UPDATE_TON_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/update-ton';
       
       const response = await fetch(UPDATE_TON_URL, {
@@ -255,14 +247,15 @@ function Home({ userData, updateUserData, isActive }) {
         },
         body: JSON.stringify({
           telegramId: telegramUserId,
-          tonAmount: newTonAmount // Отправляем абсолютное значение
+          tonAmount: tonChange
         }),
       });
 
       console.log('📥 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const data = await response.json();
@@ -270,10 +263,7 @@ function Home({ userData, updateUserData, isActive }) {
       
       if (data.success) {
         console.log('✅ TON amount updated successfully');
-        if (updateUserData) {
-          await updateUserData();
-        }
-        return { success: true, newTonAmount };
+        return { success: true };
       } else {
         console.error('❌ Error from update-ton function:', data.error);
         return { success: false, error: data.error };
@@ -282,7 +272,7 @@ function Home({ userData, updateUserData, isActive }) {
       console.error('❌ Error updating TON amount:', error);
       return { success: false, error: error.message };
     }
-  }, [safeUserData, updateUserData]);
+  }, [safeUserData]);
 
   // Create symbols pool with weights
   const symbolsPool = useCallback(() => {
@@ -351,64 +341,85 @@ function Home({ userData, updateUserData, isActive }) {
       }
     }
 
-    // 1. Обновляем bet_amount в базе данных (увеличиваем на сумму ставки)
-    const betResult = await updateBetAmountInDB(betAmount);
-    if (!betResult.success) {
-      setBetResult('Error updating bet: ' + betResult.error);
-      setIsSpinning(false);
-      return;
-    }
-
-    // Простая анимация - просто меняем символы несколько раз
-    const spinDuration = 2000;
-    const symbolChangeInterval = 100;
-    let elapsedTime = 0;
-    
-    animationRef.current = setInterval(() => {
-      elapsedTime += symbolChangeInterval;
-      
-      // Генерируем случайные символы для анимации
-      const randomSymbols = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
-      setCurrentSymbols(randomSymbols);
-      
-      if (elapsedTime >= spinDuration) {
-        // Завершаем анимацию и показываем ПРЕДОПРЕДЕЛЕННЫЕ символы
-        clearInterval(animationRef.current);
-        setCurrentSymbols(nextSpinSymbols);
-        
-        console.log('✅ АНИМАЦИЯ ЗАВЕРШЕНА, ПОКАЗЫВАЕМ ПРЕДОПРЕДЕЛЕННЫЕ СИМВОЛЫ:', nextSpinSymbols);
-        
-        // Проверяем выигрыш для ПРЕДОПРЕДЕЛЕННЫХ символов
-        const winCombination = getWinForCombination(nextSpinSymbols);
-        
-        if (winCombination) {
-          if (winCombination.multiplier === 0) {
-            // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
-            setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
-            updateTonAmountInDB(-betAmount);
-          } else {
-            // ВЫИГРЫШ - увеличиваем TON баланс на (выигрыш - ставка)
-            const winAmount = winCombination.multiplier * betAmount;
-            const netWin = winAmount - betAmount; // Чистый выигрыш
-            setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
-            
-            updateTonAmountInDB(netWin);
-            startConfetti();
-          }
-        } else {
-          // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
-          setBetResult('No win this time. Try again!');
-          updateTonAmountInDB(-betAmount);
-        }
-        
-        // 3. Увеличиваем coins на 50 после прокрутки
-        updateCoinsInDB(50);
-        
-        // Сбрасываем предопределенные символы
-        setNextSpinSymbols(null);
+    try {
+      // 1. Обновляем bet_amount в базе данных (увеличиваем на сумму ставки)
+      const betResult = await updateBetAmountInDB(betAmount);
+      if (!betResult.success) {
+        setBetResult('Error updating bet: ' + betResult.error);
         setIsSpinning(false);
+        return;
       }
-    }, symbolChangeInterval);
+
+      // Простая анимация - просто меняем символы несколько раз
+      const spinDuration = 2000;
+      const symbolChangeInterval = 100;
+      let elapsedTime = 0;
+      
+      animationRef.current = setInterval(() => {
+        elapsedTime += symbolChangeInterval;
+        
+        // Генерируем случайные символы для анимации
+        const randomSymbols = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
+        setCurrentSymbols(randomSymbols);
+        
+        if (elapsedTime >= spinDuration) {
+          // Завершаем анимацию и показываем ПРЕДОПРЕДЕЛЕННЫЕ символы
+          clearInterval(animationRef.current);
+          setCurrentSymbols(nextSpinSymbols);
+          
+          console.log('✅ АНИМАЦИЯ ЗАВЕРШЕНА, ПОКАЗЫВАЕМ ПРЕДОПРЕДЕЛЕННЫЕ СИМВОЛЫ:', nextSpinSymbols);
+          
+          // Проверяем выигрыш для ПРЕДОПРЕДЕЛЕННЫХ символов
+          const winCombination = getWinForCombination(nextSpinSymbols);
+          
+          const processResult = async () => {
+            try {
+              if (winCombination) {
+                if (winCombination.multiplier === 0) {
+                  // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
+                  setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
+                  await updateTonAmountInDB(-betAmount);
+                } else {
+                  // ВЫИГРЫШ - увеличиваем TON баланс на чистый выигрыш
+                  const winAmount = winCombination.multiplier * betAmount;
+                  const netWin = winAmount - betAmount; // Чистый выигрыш
+                  setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
+                  
+                  await updateTonAmountInDB(netWin);
+                  startConfetti();
+                }
+              } else {
+                // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
+                setBetResult('No win this time. Try again!');
+                await updateTonAmountInDB(-betAmount);
+              }
+              
+              // 3. Увеличиваем coins на 50 после прокрутки
+              await updateCoinsInDB(50);
+              
+              // Обновляем данные пользователя
+              if (updateUserData) {
+                await updateUserData();
+              }
+              
+              // Сбрасываем предопределенные символы
+              setNextSpinSymbols(null);
+              setIsSpinning(false);
+            } catch (error) {
+              console.error('❌ Error processing result:', error);
+              setBetResult('Error processing result: ' + error.message);
+              setIsSpinning(false);
+            }
+          };
+
+          processResult();
+        }
+      }, symbolChangeInterval);
+    } catch (error) {
+      console.error('❌ Error during spin process:', error);
+      setBetResult('Error during spin: ' + error.message);
+      setIsSpinning(false);
+    }
   }, [
     isSpinning, 
     nextSpinSymbols, 
