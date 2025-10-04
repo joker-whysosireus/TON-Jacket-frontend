@@ -8,20 +8,20 @@ import InstructionsModal from './Components/Modals/InstructionsModal';
 
 import './Home.css';
 
-// Константы
+// Константы с уменьшенными шансами выигрышных комбинаций
 const SYMBOLS_CONFIG = [
-  { id: 1, symbol: '🍒', name: 'Cherry', weight: 35, type: 'fruit' },
-  { id: 2, symbol: '🍋', name: 'Lemon', weight: 30, type: 'fruit' },
-  { id: 3, symbol: '🍊', name: 'Orange', weight: 25, type: 'fruit' },
-  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 20, type: 'fruit' },
-  { id: 5, symbol: '🔔', name: 'Bell', weight: 18, type: 'bell' },
-  { id: 6, symbol: '⭐', name: 'Star', weight: 15, type: 'star' },
-  { id: 7, symbol: '🍇', name: 'Grapes', weight: 12, type: 'fruit' },
-  { id: 8, symbol: '🔶', name: 'Diamond', weight: 10, type: 'diamond' },
-  { id: 9, symbol: '⑦', name: 'Seven', weight: 8, type: 'seven' },
-  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 6, type: 'premium' },
-  { id: 11, symbol: '👑', name: 'Crown', weight: 4, type: 'premium' },
-  { id: 12, symbol: '💀', name: 'Skull', weight: 2, type: 'skull' },
+  { id: 1, symbol: '🍒', name: 'Cherry', weight: 40, type: 'fruit' },
+  { id: 2, symbol: '🍋', name: 'Lemon', weight: 35, type: 'fruit' },
+  { id: 3, symbol: '🍊', name: 'Orange', weight: 30, type: 'fruit' },
+  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 25, type: 'fruit' },
+  { id: 5, symbol: '🔔', name: 'Bell', weight: 12, type: 'bell' },
+  { id: 6, symbol: '⭐', name: 'Star', weight: 10, type: 'star' },
+  { id: 7, symbol: '🍇', name: 'Grapes', weight: 15, type: 'fruit' },
+  { id: 8, symbol: '🔶', name: 'Diamond', weight: 6, type: 'diamond' },
+  { id: 9, symbol: '⑦', name: 'Seven', weight: 4, type: 'seven' },
+  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 2, type: 'premium' },
+  { id: 11, symbol: '👑', name: 'Crown', weight: 1, type: 'premium' },
+  { id: 12, symbol: '💀', name: 'Skull', weight: 8, type: 'skull' },
   { id: 13, symbol: '🔥', name: 'Fire', weight: 1, type: 'special' }
 ];
 
@@ -33,30 +33,30 @@ const getWinForCombination = (symbols) => {
   // 1. ТРОЙНЫЕ КОМБИНАЦИИ
   if (a === b && b === c) {
     const tripleWins = {
-      '🍒': { multiplier: 5, name: 'TRIPLE CHERRY' },
-      '🍋': { multiplier: 8, name: 'TRIPLE LEMON' },
-      '🍊': { multiplier: 10, name: 'TRIPLE ORANGE' },
-      '🍉': { multiplier: 15, name: 'TRIPLE WATERMELON' },
-      '🔔': { multiplier: 30, name: 'TRIPLE BELL' },
-      '⭐': { multiplier: 25, name: 'TRIPLE STAR' },
-      '🍇': { multiplier: 20, name: 'TRIPLE GRAPES' },
-      '🔶': { multiplier: 40, name: 'TRIPLE DIAMOND' },
-      '⑦': { multiplier: 50, name: 'TRIPLE SEVEN' },
-      '💎': { multiplier: 200, name: 'DIAMOND JACKPOT' },
-      '👑': { multiplier: 100, name: 'CROWN JACKPOT' },
+      '🍒': { multiplier: 3, name: 'TRIPLE CHERRY' },
+      '🍋': { multiplier: 4, name: 'TRIPLE LEMON' },
+      '🍊': { multiplier: 5, name: 'TRIPLE ORANGE' },
+      '🍉': { multiplier: 6, name: 'TRIPLE WATERMELON' },
+      '🔔': { multiplier: 8, name: 'TRIPLE BELL' },
+      '⭐': { multiplier: 7, name: 'TRIPLE STAR' },
+      '🍇': { multiplier: 5, name: 'TRIPLE GRAPES' },
+      '🔶': { multiplier: 10, name: 'TRIPLE DIAMOND' },
+      '⑦': { multiplier: 12, name: 'TRIPLE SEVEN' },
+      '💎': { multiplier: 50, name: 'DIAMOND JACKPOT' },
+      '👑': { multiplier: 25, name: 'CROWN JACKPOT' },
       '💀': { multiplier: 0, name: 'SKULL BUST' },
-      '🔥': { multiplier: 75, name: 'FIRE BONUS' }
+      '🔥': { multiplier: 15, name: 'FIRE BONUS' }
     };
     return tripleWins[a] || null;
   }
   
-  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ
-  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 15, name: 'DIAMOND STAR' };
-  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 12, name: 'CROWN STAR' };
-  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 10, name: 'SEVEN STAR' };
-  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 8, name: 'BELL STAR' };
+  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ (уменьшены множители)
+  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 8, name: 'DIAMOND STAR' };
+  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 6, name: 'CROWN STAR' };
+  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 5, name: 'SEVEN STAR' };
+  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 4, name: 'BELL STAR' };
   
-  // 3. ДВОЙНЫЕ КОМБИНАЦИИ
+  // 3. ДВОЙНЫЕ КОМБИНАЦИИ (уменьшены множители)
   if (a === b || a === c || b === c) {
     let doubleSymbol;
     if (a === b) doubleSymbol = a;
@@ -64,31 +64,31 @@ const getWinForCombination = (symbols) => {
     else doubleSymbol = b;
     
     const doubleWins = {
-      '🍒': { multiplier: 2, name: 'DOUBLE CHERRY' },
-      '🍋': { multiplier: 2, name: 'DOUBLE LEMON' },
-      '🍊': { multiplier: 2, name: 'DOUBLE ORANGE' },
-      '🍉': { multiplier: 2, name: 'DOUBLE WATERMELON' },
-      '🔔': { multiplier: 2.5, name: 'DOUBLE BELL' },
-      '⭐': { multiplier: 2, name: 'DOUBLE STAR' },
-      '🍇': { multiplier: 2, name: 'DOUBLE GRAPES' },
-      '🔶': { multiplier: 3, name: 'DOUBLE DIAMOND' },
-      '⑦': { multiplier: 4, name: 'DOUBLE SEVEN' },
-      '💎': { multiplier: 8, name: 'DOUBLE PREMIUM DIAMOND' },
-      '👑': { multiplier: 6, name: 'DOUBLE CROWN' },
+      '🍒': { multiplier: 1, name: 'DOUBLE CHERRY' },
+      '🍋': { multiplier: 1, name: 'DOUBLE LEMON' },
+      '🍊': { multiplier: 1, name: 'DOUBLE ORANGE' },
+      '🍉': { multiplier: 1, name: 'DOUBLE WATERMELON' },
+      '🔔': { multiplier: 1.5, name: 'DOUBLE BELL' },
+      '⭐': { multiplier: 1, name: 'DOUBLE STAR' },
+      '🍇': { multiplier: 1, name: 'DOUBLE GRAPES' },
+      '🔶': { multiplier: 2, name: 'DOUBLE DIAMOND' },
+      '⑦': { multiplier: 2.5, name: 'DOUBLE SEVEN' },
+      '💎': { multiplier: 4, name: 'DOUBLE PREMIUM DIAMOND' },
+      '👑': { multiplier: 3, name: 'DOUBLE CROWN' },
       '💀': { multiplier: 0, name: 'DOUBLE SKULL' },
-      '🔥': { multiplier: 5, name: 'DOUBLE FIRE' }
+      '🔥': { multiplier: 2, name: 'DOUBLE FIRE' }
     };
     
     return doubleWins[doubleSymbol] || null;
   }
   
-  // 4. ФРУКТОВЫЕ МИКСЫ
+  // 4. ФРУКТОВЫЕ МИКСЫ (уменьшен множитель)
   const fruits = ['🍒', '🍋', '🍊', '🍉', '🍇'];
   const isAllFruits = fruits.includes(a) && fruits.includes(b) && fruits.includes(c);
   const uniqueFruits = new Set([a, b, c]);
   
   if (isAllFruits && uniqueFruits.size === 3) {
-    return { multiplier: 1.5, name: 'FRUIT MIX' };
+    return { multiplier: 1.2, name: 'FRUIT MIX' };
   }
   
   return null;
