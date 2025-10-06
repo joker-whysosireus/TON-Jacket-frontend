@@ -1,0 +1,61 @@
+import { useState, useEffect } from 'react';
+import './Modals.css';
+
+function ConvertModal({ show, onClose, userData, onConvert }) {
+    const [coinsAmount, setCoinsAmount] = useState('');
+    const [tonEquivalent, setTonEquivalent] = useState(0);
+    const conversionRate = 0.00001;
+    const minConvertAmount = 1000;
+
+    useEffect(() => {
+        const amount = parseFloat(coinsAmount) || 0;
+        setTonEquivalent(amount * conversionRate);
+    }, [coinsAmount, conversionRate]);
+
+    if (!show) return null;
+
+    return (
+        <div className="convert-modal-overlay" onClick={onClose}>
+            <div className="convert-modal-content convert-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="convert-modal-header">
+                    <h2>💰 Convert Coins to TON</h2>
+                    <button className="convert-modal-close" onClick={onClose}>×</button>
+                </div>
+                
+                <div className="convert-modal-body">
+                    <div className="convert-modal-balance">
+                        <div className="convert-balance-amount">
+                            {userData?.coins?.toFixed(3) || '0.000'} 🏅
+                        </div>
+                        <div className="convert-conversion-info">Available for conversion</div>
+                        <div className="convert-rate-info">
+                            🏅1000 coins = 0.01 TON
+                        </div>
+                        <div className="convert-minimum-info">
+                            Minimum conversion: 1000 coins
+                        </div>
+                    </div>
+
+                    <div className="convert-modal-input-section">
+                        <div className="convert-conversion-result">
+                            <div className="convert-conversion-label">You will receive</div>
+                            <div className="convert-ton-amount">
+                                {((userData?.coins || 0) * conversionRate).toFixed(6)} TON
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={onConvert}
+                            disabled={!userData?.coins || userData.coins < minConvertAmount}
+                            className={`convert-modal-button ${!userData?.coins || userData.coins < minConvertAmount ? 'disabled' : ''}`}
+                        >
+                            CONVERT TO TON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default ConvertModal;

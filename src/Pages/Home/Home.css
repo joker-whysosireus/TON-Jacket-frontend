@@ -280,9 +280,7 @@
 }
 
 @media (max-height: 670px) {
-  .container {
-    padding-bottom: 50px;
-  }
+  
 
   .slot-machine {
     height: 120px;
@@ -331,6 +329,7 @@
     border-radius: 8px;
     margin-top: 15px;
     max-width: 480px;
+    margin-bottom: 15px;
   }
 
   .spinner {

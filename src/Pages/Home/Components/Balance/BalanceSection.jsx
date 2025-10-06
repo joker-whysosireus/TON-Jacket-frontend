@@ -1,6 +1,6 @@
 import React from 'react';
 import './BalanceSection.css';
-import TonLogo from '../img/TonLogo.png'; // Правильный путь
+import TonLogo from '../../../../Public/TonLogo.png';
 
 const TonLogoIcon = ({ size = 20, className = "" }) => {
   return (

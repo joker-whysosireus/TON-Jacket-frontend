@@ -22,7 +22,7 @@
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 500px;
-  max-height: 85vh;
+  height: 560px;
   display: flex;
   flex-direction: column;
   transform: translateY(100%);
@@ -45,7 +45,7 @@
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 20px;
   color: var(--text-color);
 }
 

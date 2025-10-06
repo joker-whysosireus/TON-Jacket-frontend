@@ -1,0 +1,395 @@
+:root {
+    --modal-bg: #0f0f0f;
+}
+
+.convert-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 1010;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.convert-modal-content {
+    background-color: var(--modal-bg);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    animation: slideUp 0.4s ease-out forwards;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.convert-modal {
+    max-height: 520px;
+}
+
+.deposit-modal {
+    max-height: 520px;
+}
+
+.withdraw-modal {
+    max-height: 640px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.convert-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #333;
+    position: relative;
+    min-height: 60px;
+}
+
+.convert-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.convert-modal-close {
+    font-size: 2rem;
+    cursor: pointer;
+    color: white;
+    line-height: 1;
+    transition: all 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.convert-modal-close:hover {
+    color: #666;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.convert-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px;
+    min-height: 0;
+}
+
+.convert-modal-balance {
+    text-align: center;
+    margin-bottom: 15px;
+    background: #000000;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #333;
+}
+
+.convert-balance-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.convert-conversion-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.convert-rate-info {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.convert-minimum-info {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+.convert-modal-input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.convert-input-group {
+    position: relative;
+    width: 100%;
+}
+
+.convert-amount-input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background: #000000;
+    color: white;
+    font-size: 1.1rem;
+    box-sizing: border-box;
+    height: 56px;
+    transition: border-color 0.2s;
+}
+
+.convert-amount-input:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.convert-amount-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.convert-max-button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background: #333;
+}
+
+.convert-max-button:hover {
+    background: #444;
+}
+
+.convert-conversion-result {
+    text-align: center;
+    background: #000000;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #333;
+}
+
+.convert-conversion-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.convert-ton-amount {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+}
+
+.convert-modal-button {
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fff;
+    color: #000;
+}
+
+.convert-modal-button:not(.disabled):hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.convert-modal-button:not(.disabled):active {
+    transform: scale(0.98);
+}
+
+.convert-modal-button.disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.withdraw-action-btn {
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.withdraw-action-btn:hover:not(.disabled) {
+    background: #e0e0e0 !important;
+}
+
+.withdraw-input-group {
+    position: relative;
+    width: 100%;
+}
+
+.wallet-address-input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background: #000000;
+    color: white;
+    font-size: 1.1rem;
+    box-sizing: border-box;
+    height: 56px;
+    transition: border-color 0.2s;
+    font-family: monospace;
+}
+
+.wallet-address-input:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.wallet-address-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.withdraw-notice {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.withdraw-notice p {
+    margin: 5px 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+.bet-modal-amounts {
+    margin: 20px 0;
+}
+
+.amount-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.deposit-info {
+    text-align: center;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+}
+
+.deposit-amount-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #000000;
+    border: 2px solid #333;
+    border-radius: 12px;
+}
+
+.profile-ton-logo {
+    display: block;
+    flex-shrink: 0;
+}
+
+.deposit-amount-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+}
+
+.deposit-action-button {
+    padding: 15px 25px;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 20px;
+}
+
+.deposit-action-button:hover:not(.disabled) {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.deposit-action-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #fff !important;
+    color: #000 !important;
+    transform: none;
+}
+
+.choice-btn {
+    padding: 18px 18px;
+    background-color: transparent;
+    color: #fff;
+    border: 3px solid #fff;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.choice-btn.active,
+.choice-btn:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.choice-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: transparent !important;
+    color: #fff !important;
+    border-color: #fff !important;
+}

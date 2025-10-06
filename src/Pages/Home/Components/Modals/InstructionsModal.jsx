@@ -89,7 +89,7 @@ const InstructionsModal = ({ showInstructions, onClose }) => {
     <div className="modal-overlay instructions-modal" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>🎰 How to Play & Winning Combinations</h2>
+          <h2>🎰 Winning Combinations</h2>
           <span className="modal-close" onClick={onClose}>×</span>
         </div>
         <div className="modal-body">

@@ -1,5 +1,6 @@
 import './Friends.css';
 import Menu from '../../Assets/Menus/Menu/Menu';
+import BalanceSection from '../Home/Components/Balance/BalanceSection';
 
 function Friends({ userData, updateUserData }) {
     const handleInviteClick = () => {
@@ -17,8 +18,10 @@ function Friends({ userData, updateUserData }) {
 
     return (
         <div className='container'>
-            {/* Блок с рукопожатием и информацией о приглашенных друзьях */}
-            <div className="invite-header-section">
+            <BalanceSection />
+            
+            {/* Секция с информацией о друзьях */}
+            <div className="friends-info-section">
                 <div className="handshake-emoji">🤝</div>
                 <div className="invited-friends-count">
                     <span className="count-number">{userData?.invited_friends || 0}</span>
@@ -29,20 +32,21 @@ function Friends({ userData, updateUserData }) {
                 </div>
             </div>
 
-            {/* Секция с coins_for_invite */}
-            <div className="coins-for-invite-section">
-                <div className="coins-amount">
-                    🏅{userData?.coins_for_invite?.toFixed(3) || '0.000'}
+            {/* Секция с коинами и кнопкой */}
+            <div className="coins-button-section">
+                <div className="coins-for-invite-section">
+                    <div className="coins-amount">
+                        🏅{userData?.coins_for_invite?.toFixed(3) || '0.000'}
+                    </div>
+                    <div className="coins-label">
+                        Coins from Invites
+                    </div>
                 </div>
-                <div className="coins-label">
-                    Coins from Invites
+
+                <div className='Container-button'>
+                    <button className='Invite-button' onClick={handleInviteClick}>INVITE FRIENDS</button>
                 </div>
             </div>
-
-            {/* Кнопка приглашения */}
-            <section className='Container-button'>
-                <button className='Invite-button' onClick={handleInviteClick}>Invite Friends</button>
-            </section>
             
             <Menu />
         </div>
