@@ -18,7 +18,7 @@ function Friends({ userData, updateUserData }) {
 
     return (
         <div className='container'>
-            <BalanceSection />
+            <BalanceSection userData={userData}/>
             
             {/* Секция с информацией о друзьях */}
             <div className="friends-info-section">

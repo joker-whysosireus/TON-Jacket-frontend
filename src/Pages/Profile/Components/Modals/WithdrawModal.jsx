@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
 import './Modals.css';
 
-function WithdrawModal({ show, onClose, userData, onWithdraw }) {
+function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, withdrawSuccess }) {
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
-    const [isWithdrawing, setIsWithdrawing] = useState(false);
 
     useEffect(() => {
         if (show && userData?.wallet && userData.wallet !== "no wallet") {
             setWalletAddress(userData.wallet);
         }
     }, [show, userData?.wallet]);
+
+    // Сброс состояний при закрытии
+    useEffect(() => {
+        if (!show) {
+            setWithdrawAmount('');
+            setWalletAddress('');
+        }
+    }, [show]);
 
     const handleWithdrawAmountChange = (e) => {
         const value = e.target.value;
@@ -28,9 +35,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw }) {
 
     const handleWithdraw = async () => {
         if (parseFloat(withdrawAmount) > 0 && walletAddress) {
-            setIsWithdrawing(true);
             await onWithdraw(withdrawAmount, walletAddress);
-            setIsWithdrawing(false);
         }
     };
 
@@ -78,6 +83,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw }) {
                             <button
                                 onClick={handleMaxTonClick}
                                 className="convert-max-button"
+                                disabled={isWithdrawing}
                             >
                                 MAX
                             </button>
@@ -93,7 +99,18 @@ function WithdrawModal({ show, onClose, userData, onWithdraw }) {
                             disabled={!isValidWithdrawal || isWithdrawing}
                             className={`convert-modal-button withdraw-action-btn ${!isValidWithdrawal || isWithdrawing ? 'disabled' : ''}`}
                         >
-                            {isWithdrawing ? 'PROCESSING...' : 'WITHDRAW TON'}
+                            {isWithdrawing ? (
+                                withdrawSuccess ? (
+                                    'Success!'
+                                ) : (
+                                    <>
+                                        <div className="spinner"></div>
+                                        Processing...
+                                    </>
+                                )
+                            ) : (
+                                'WITHDRAW TON'
+                            )}
                         </button>
                     </div>
                 </div>

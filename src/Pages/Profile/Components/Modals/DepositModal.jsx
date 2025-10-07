@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TonLogo from '../../../../Public/TonLogo.png';
 import './Modals.css';
 
-function DepositModal({ show, onClose, userData, onDeposit, isDepositing }) {
+function DepositModal({ show, onClose, userData, onDeposit, isDepositing, depositSuccess }) {
     const [depositAmount, setDepositAmount] = useState('');
     const fixedAmounts = [1, 5, 10, 25, 50, 100];
 
@@ -16,6 +16,13 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing }) {
             />
         );
     };
+
+    // Сброс состояний при закрытии
+    useEffect(() => {
+        if (!show) {
+            setDepositAmount('');
+        }
+    }, [show]);
 
     const handleFixedAmountClick = (amount) => {
         setDepositAmount(amount.toString());
@@ -48,8 +55,9 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing }) {
                             {fixedAmounts.map((amount) => (
                                 <button
                                     key={amount}
-                                    className={`choice-btn ${depositAmount === amount.toString() ? 'active' : ''}`}
+                                    className={`choice-btn ${depositAmount === amount.toString() ? 'active' : ''} ${isDepositing ? 'disabled' : ''}`}
                                     onClick={() => handleFixedAmountClick(amount)}
+                                    disabled={isDepositing}
                                 >
                                     {amount} TON
                                 </button>
@@ -62,7 +70,18 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing }) {
                         disabled={!isValidDeposit || isDepositing}
                         className={`deposit-action-button ${!isValidDeposit || isDepositing ? 'disabled' : ''}`}
                     >
-                        {isDepositing ? 'PROCESSING...' : `Deposit ${depositAmount} TON`}
+                        {isDepositing ? (
+                            depositSuccess ? (
+                                'Success!'
+                            ) : (
+                                <>
+                                    <div className="spinner"></div>
+                                    Processing...
+                                </>
+                            )
+                        ) : (
+                            `Deposit ${depositAmount} TON`
+                        )}
                     </button>
                 </div>
             </div>

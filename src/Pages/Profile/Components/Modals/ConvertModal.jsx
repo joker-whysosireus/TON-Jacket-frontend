@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Modals.css';
 
-function ConvertModal({ show, onClose, userData, onConvert }) {
+function ConvertModal({ show, onClose, userData, onConvert, isConverting, convertSuccess }) {
     const [coinsAmount, setCoinsAmount] = useState('');
     const [tonEquivalent, setTonEquivalent] = useState(0);
     const conversionRate = 0.00001;
@@ -11,6 +11,14 @@ function ConvertModal({ show, onClose, userData, onConvert }) {
         const amount = parseFloat(coinsAmount) || 0;
         setTonEquivalent(amount * conversionRate);
     }, [coinsAmount, conversionRate]);
+
+    // Сброс состояний при закрытии
+    useEffect(() => {
+        if (!show) {
+            setCoinsAmount('');
+            setTonEquivalent(0);
+        }
+    }, [show]);
 
     if (!show) return null;
 
@@ -46,10 +54,21 @@ function ConvertModal({ show, onClose, userData, onConvert }) {
 
                         <button
                             onClick={onConvert}
-                            disabled={!userData?.coins || userData.coins < minConvertAmount}
-                            className={`convert-modal-button ${!userData?.coins || userData.coins < minConvertAmount ? 'disabled' : ''}`}
+                            disabled={!userData?.coins || userData.coins < minConvertAmount || isConverting}
+                            className={`convert-modal-button ${!userData?.coins || userData.coins < minConvertAmount || isConverting ? 'disabled' : ''}`}
                         >
-                            CONVERT TO TON
+                            {isConverting ? (
+                                convertSuccess ? (
+                                    'Success!'
+                                ) : (
+                                    <>
+                                        <div className="spinner"></div>
+                                        Processing...
+                                    </>
+                                )
+                            ) : (
+                                'CONVERT TO TON'
+                            )}
                         </button>
                     </div>
                 </div>

@@ -5,7 +5,7 @@
 }
 
 .stat-card {
-    background: #000000;
+    background: var(--modal-bg);
     border: 2px solid var(--secondary-color);
     border-radius: 12px;
     padding: 16px;

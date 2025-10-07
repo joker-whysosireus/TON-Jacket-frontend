@@ -191,6 +191,11 @@
     background: #444;
 }
 
+.convert-max-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .convert-conversion-result {
     text-align: center;
     background: #000000;
@@ -222,6 +227,10 @@
     transition: all 0.3s ease;
     background: #fff;
     color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .convert-modal-button:not(.disabled):hover {
@@ -346,6 +355,10 @@
     width: 100%;
     box-sizing: border-box;
     margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .deposit-action-button:hover:not(.disabled) {
@@ -381,7 +394,7 @@
 }
 
 .choice-btn.active,
-.choice-btn:hover {
+.choice-btn:hover:not(.disabled) {
     background-color: #fff;
     color: #000;
 }
@@ -392,4 +405,93 @@
     background-color: transparent !important;
     color: #fff !important;
     border-color: #fff !important;
+}
+
+/* Стили для спиннера */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Стили для успешного состояния */
+.convert-modal-button:not(.disabled):contains("Success!") {
+    background: #22c55e;
+    color: white;
+}
+
+.deposit-action-button:not(.disabled):contains("Success!") {
+    background: #22c55e;
+    color: white;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 480px) {
+    .convert-modal-content {
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .convert-modal-header {
+        padding: 16px 20px;
+    }
+    
+    .convert-modal-body {
+        padding: 20px;
+    }
+    
+    .convert-balance-amount {
+        font-size: 1.5rem;
+    }
+    
+    .amount-buttons-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .choice-btn {
+        height: 45px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Стили для темной темы */
+@media (prefers-color-scheme: dark) {
+    .convert-modal-content {
+        background-color: var(--modal-bg);
+    }
+    
+    .convert-modal-balance,
+    .convert-conversion-result,
+    .deposit-amount-display {
+        background: #1a1a1a;
+        border-color: #333;
+    }
+    
+    .convert-amount-input,
+    .wallet-address-input {
+        background: #1a1a1a;
+        border-color: #333;
+        color: white;
+    }
+}
+
+/* Анимация для успешного состояния */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.convert-modal-button:not(.disabled):contains("Success!"),
+.deposit-action-button:not(.disabled):contains("Success!") {
+    animation: successPulse 0.5s ease-in-out;
 }
