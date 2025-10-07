@@ -33,8 +33,8 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
     if (!show) return null;
 
     return (
-        <div className="convert-modal-overlay" onClick={onClose}>
-            <div className="convert-modal-content deposit-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="convert-modal-overlay" onClick={onClose} style={{ zIndex: 999 }}>
+            <div className="convert-modal-content deposit-modal" onClick={(e) => e.stopPropagation()} style={{ zIndex: 1000 }}>
                 <div className="convert-modal-header">
                     <h2>💰 Deposit TON</h2>
                     <button className="convert-modal-close" onClick={onClose}>×</button>

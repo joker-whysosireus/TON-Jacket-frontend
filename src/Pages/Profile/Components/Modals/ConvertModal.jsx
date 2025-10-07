@@ -33,7 +33,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                 <div className="convert-modal-body">
                     <div className="convert-modal-balance">
                         <div className="convert-balance-amount">
-                            {userData?.coins?.toFixed(3) || '0.000'} 🏅
+                            {userData?.coins?.toFixed(2) || '0.00'} 🏅
                         </div>
                         <div className="convert-conversion-info">Available for conversion</div>
                         <div className="convert-rate-info">
@@ -48,7 +48,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                         <div className="convert-conversion-result">
                             <div className="convert-conversion-label">You will receive</div>
                             <div className="convert-ton-amount">
-                                {((userData?.coins || 0) * conversionRate).toFixed(6)} TON
+                                {((userData?.coins || 0) * conversionRate).toFixed(2)} TON
                             </div>
                         </div>
 

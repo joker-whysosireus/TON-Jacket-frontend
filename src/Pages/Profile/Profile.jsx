@@ -13,8 +13,8 @@ import './Profile.css';
 
 function Profile({ userData, updateUserData }) {
     const [tonConnectUI] = useTonConnectUI();
-    const userFriendlyAddress = useTonAddress(true); // Получаем пользовательский адрес
-    const address = useTonAddress();
+    const userFriendlyAddress = useTonAddress(true);
+    const rawAddress = useTonAddress(false);
     const [walletConnected, setWalletConnected] = useState(false);
     
     const [showConvertModal, setShowConvertModal] = useState(false);
@@ -39,6 +39,8 @@ function Profile({ userData, updateUserData }) {
 
     const conversionRate = 0.00001;
     const minConvertAmount = 1000;
+    
+    // Правильный адрес для депозита
     const depositWalletAddress = "UQB_2coQNHxdWZN0b7y9QUy13jLl2XNaN2yPcicFJbCbhSEK";
 
     // Confetti animation
@@ -70,7 +72,7 @@ function Profile({ userData, updateUserData }) {
     // Check wallet connection status
     useEffect(() => {
         const checkConnection = () => {
-            const isConnected = !!localStorage.getItem('ton-connect') || !!address;
+            const isConnected = !!localStorage.getItem('ton-connect') || !!rawAddress;
             setWalletConnected(isConnected);
         };
         
@@ -81,20 +83,21 @@ function Profile({ userData, updateUserData }) {
         });
         
         return () => unsubscribe();
-    }, [tonConnectUI, address]);
+    }, [tonConnectUI, rawAddress]);
 
-    // Listen for wallet connection to update userData - ИСПРАВЛЕНО: используем userFriendlyAddress
+    // Listen for wallet connection to update userData
     useEffect(() => {
         let unsubscribe;
         
         const handleStatusChange = async (walletInfo) => {
             if (walletInfo && userData) {
                 try {
-                    // Используем user-friendly адрес вместо raw адреса
-                    const addressToSave = userFriendlyAddress || walletInfo.account.address;
+                    const addressToSave = userFriendlyAddress;
                     
-                    console.log("Saving wallet address:", addressToSave);
-                    
+                    if (!addressToSave || addressToSave === '') {
+                        return;
+                    }
+
                     const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/updateWallet', {
                         method: 'POST',
                         headers: {
@@ -113,12 +116,9 @@ function Profile({ userData, updateUserData }) {
                             ...userData,
                             wallet: addressToSave
                         });
-                        console.log("Wallet address updated successfully:", addressToSave);
-                    } else {
-                        console.error('Error updating wallet:', result.error);
                     }
                 } catch (error) {
-                    console.error('Error updating wallet:', error);
+                    // console.error removed as requested
                 }
             }
         };
@@ -132,7 +132,7 @@ function Profile({ userData, updateUserData }) {
                 unsubscribe();
             }
         };
-    }, [tonConnectUI, userData, updateUserData, userFriendlyAddress]); // Добавлен userFriendlyAddress в зависимости
+    }, [tonConnectUI, userData, updateUserData, userFriendlyAddress, rawAddress]);
 
     const handleConvert = async () => {
         const amount = userData?.coins || 0;
@@ -158,21 +158,17 @@ function Profile({ userData, updateUserData }) {
                 if (response.ok) {
                     updateUserData(result.data);
                     setConvertSuccess(true);
+                    startConfetti(); // Добавляем конфетти для конвертации
                     
-                    // Ждем 1.5 секунды перед закрытием
                     setTimeout(() => {
                         setShowConvertModal(false);
                         setIsConverting(false);
                         setConvertSuccess(false);
                     }, 1500);
                 } else {
-                    console.error('Error converting coins:', result.error);
-                    alert('Error converting coins: ' + result.error);
                     setIsConverting(false);
                 }
             } catch (error) {
-                console.error('Error converting coins:', error);
-                alert('Error converting coins: ' + error.message);
                 setIsConverting(false);
             }
         }
@@ -195,8 +191,8 @@ function Profile({ userData, updateUserData }) {
                 });
 
                 setWithdrawSuccess(true);
+                startConfetti(); // Добавляем конфетти для вывода
                 
-                // Ждем 1.5 секунды перед закрытием
                 setTimeout(() => {
                     setIsWithdrawing(false);
                     setWithdrawSuccess(false);
@@ -208,12 +204,12 @@ function Profile({ userData, updateUserData }) {
 
     const handleDepositWithTon = async (depositAmount) => {
         if (!tonConnectUI.connected) {
+            setShowDepositModal(false);
             tonConnectUI.openModal();
             return;
         }
 
         if (!depositAmount || parseFloat(depositAmount) <= 0) {
-            alert('Please select an amount');
             return;
         }
 
@@ -221,7 +217,6 @@ function Profile({ userData, updateUserData }) {
         setDepositSuccess(false);
 
         try {
-            // Convert TON to nanotons (1 TON = 1e9 nanotons)
             const amountInNanotons = (parseFloat(depositAmount) * 1e9).toString();
 
             const transaction = {
@@ -235,9 +230,7 @@ function Profile({ userData, updateUserData }) {
             };
 
             const result = await tonConnectUI.sendTransaction(transaction);
-            console.log("Transaction sent:", result);
 
-            // После успешной транзакции, обновляем баланс пользователя
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/deposit-ton', {
                 method: 'POST',
                 headers: {
@@ -254,28 +247,15 @@ function Profile({ userData, updateUserData }) {
             if (response.ok) {
                 updateUserData(resultData.data);
                 setDepositSuccess(true);
-                startConfetti(); // Запускаем конфетти
+                startConfetti();
                 
-                // Закрываем модальное окно сразу после успеха
                 setTimeout(() => {
                     setShowDepositModal(false);
-                    setIsDepositing(false);
-                    setDepositSuccess(false);
-                }, 1500);
-            } else {
-                console.error('Error depositing TON:', resultData.error);
-                alert('Error depositing TON: ' + resultData.error);
-                setIsDepositing(false);
+                }, 2000);
             }
-
         } catch (error) {
-            // Не показываем console.warn при отмене пользователем
-            if (!error.message?.includes('User rejected the transaction') && 
-                !error.message?.includes('User cancelled') &&
-                !error.message?.includes('Cancelled by user')) {
-                console.error('Error sending TON:', error);
-                alert('Error sending TON: ' + error.message);
-            }
+            // Игнорируем ошибки отмены пользователем, остальные ошибки просто не показываем
+        } finally {
             setIsDepositing(false);
         }
     };
