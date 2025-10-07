@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
+import TonLogo from '../../../../Public/TonLogo.png';
 import './Modals.css';
 
 function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, withdrawSuccess }) {
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
+
+    const TonLogoIcon = ({ size = 20, className = "" }) => {
+        return (
+            <img 
+                src={TonLogo} 
+                alt="TON" 
+                className={`profile-ton-logo ${className}`}
+                style={{ width: size, height: size }} 
+            />
+        );
+    };
 
     useEffect(() => {
         if (show && userData?.wallet && userData.wallet !== "no wallet") {
@@ -54,9 +66,12 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                 </div>
                 
                 <div className="convert-modal-body">
-                    <div className="convert-modal-balance">
-                        <div className="convert-balance-amount">
-                            {userData?.ton_amount?.toFixed(6) || '0.000000'} TON
+                    <div className="convert-modal-balance withdraw-balance">
+                        <div className="balance-content-with-logo">
+                            <TonLogoIcon size={32} className="ton-logo-align" />
+                            <div className="convert-balance-amount withdraw-balance-amount">
+                                {userData?.ton_amount?.toFixed(2) || '0.00'} TON
+                            </div>
                         </div>
                         <div className="convert-conversion-info">Available for withdrawal</div>
                     </div>

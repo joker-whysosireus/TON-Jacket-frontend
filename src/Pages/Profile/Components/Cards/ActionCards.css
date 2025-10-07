@@ -5,8 +5,7 @@
 }
 
 .action-card {
-    background: var(--modal-bg);
-    border: 2px solid var(--secondary-color);
+    background: #0f0f0f;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;

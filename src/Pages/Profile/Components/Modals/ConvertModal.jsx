@@ -48,7 +48,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                         <div className="convert-conversion-result">
                             <div className="convert-conversion-label">You will receive</div>
                             <div className="convert-ton-amount">
-                                {((userData?.coins || 0) * conversionRate).toFixed(6)} TON
+                                {((userData?.coins || 0) * conversionRate).toFixed(3)} TON
                             </div>
                         </div>
 

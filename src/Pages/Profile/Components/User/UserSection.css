@@ -7,7 +7,6 @@
     margin-bottom: 15px;
     padding: 20px;
     background: var(--modal-bg);
-    border: 2px solid var(--secondary-color);
     border-radius: 16px;
 }
 
