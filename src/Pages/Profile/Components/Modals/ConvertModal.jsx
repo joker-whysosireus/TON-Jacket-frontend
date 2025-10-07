@@ -48,7 +48,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                         <div className="convert-conversion-result">
                             <div className="convert-conversion-label">You will receive</div>
                             <div className="convert-ton-amount">
-                                {((userData?.coins || 0) * conversionRate).toFixed(3)} TON
+                                {((userData?.coins || 0) * conversionRate).toFixed(6)} TON
                             </div>
                         </div>
 
@@ -61,10 +61,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                                 convertSuccess ? (
                                     'Success!'
                                 ) : (
-                                    <>
-                                        <div className="spinner"></div>
-                                        Processing...
-                                    </>
+                                    <div className="spinner"></div>
                                 )
                             ) : (
                                 'CONVERT TO TON'

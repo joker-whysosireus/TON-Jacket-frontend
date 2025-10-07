@@ -1,10 +1,9 @@
 import { useRef, useEffect } from 'react';
-import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
+import { useTonConnectUI } from '@tonconnect/ui-react';
 import './UserSection.css';
 
-function UserSection({ userData, walletConnected, setWalletConnected }) {
+function UserSection({ userData, walletConnected, setWalletConnected, userFriendlyAddress }) {
     const [tonConnectUI] = useTonConnectUI();
-    const userFriendlyAddress = useTonAddress(true);
     const buttonRef = useRef(null);
 
     const handleWalletAction = async () => {

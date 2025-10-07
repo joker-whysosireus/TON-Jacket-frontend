@@ -74,10 +74,7 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                             depositSuccess ? (
                                 'Success!'
                             ) : (
-                                <>
-                                    <div className="spinner"></div>
-                                    Processing...
-                                </>
+                                <div className="spinner"></div>
                             )
                         ) : (
                             `Deposit ${depositAmount} TON`

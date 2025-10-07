@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
+import Confetti from 'react-confetti';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
 import UserSection from './Components/User/UserSection';
@@ -12,6 +13,7 @@ import './Profile.css';
 
 function Profile({ userData, updateUserData }) {
     const [tonConnectUI] = useTonConnectUI();
+    const userFriendlyAddress = useTonAddress(true); // Получаем пользовательский адрес
     const address = useTonAddress();
     const [walletConnected, setWalletConnected] = useState(false);
     
@@ -27,9 +29,43 @@ function Profile({ userData, updateUserData }) {
     const [isDepositing, setIsDepositing] = useState(false);
     const [depositSuccess, setDepositSuccess] = useState(false);
 
+    // Состояния для Confetti
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [confettiOpacity, setConfettiOpacity] = useState(1);
+    const [windowDimensions, setWindowDimensions] = useState({ 
+        width: window.innerWidth, 
+        height: window.innerHeight 
+    });
+
     const conversionRate = 0.00001;
     const minConvertAmount = 1000;
     const depositWalletAddress = "UQB_2coQNHxdWZN0b7y9QUy13jLl2XNaN2yPcicFJbCbhSEK";
+
+    // Confetti animation
+    const startConfetti = useCallback(() => {
+        setShowConfetti(true);
+        setConfettiOpacity(1);
+        
+        setTimeout(() => {
+            setConfettiOpacity(0);
+        }, 3000);
+        
+        setTimeout(() => {
+            setShowConfetti(false);
+        }, 4000);
+    }, []);
+
+    // Effect для обновления размеров окна
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Check wallet connection status
     useEffect(() => {
@@ -47,14 +83,17 @@ function Profile({ userData, updateUserData }) {
         return () => unsubscribe();
     }, [tonConnectUI, address]);
 
-    // Listen for wallet connection to update userData
+    // Listen for wallet connection to update userData - ИСПРАВЛЕНО: используем userFriendlyAddress
     useEffect(() => {
         let unsubscribe;
         
         const handleStatusChange = async (walletInfo) => {
             if (walletInfo && userData) {
                 try {
-                    const address = walletInfo.account.address;
+                    // Используем user-friendly адрес вместо raw адреса
+                    const addressToSave = userFriendlyAddress || walletInfo.account.address;
+                    
+                    console.log("Saving wallet address:", addressToSave);
                     
                     const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/updateWallet', {
                         method: 'POST',
@@ -63,7 +102,7 @@ function Profile({ userData, updateUserData }) {
                         },
                         body: JSON.stringify({
                             userId: userData.telegram_user_id,
-                            walletAddress: address
+                            walletAddress: addressToSave
                         })
                     });
 
@@ -72,8 +111,9 @@ function Profile({ userData, updateUserData }) {
                     if (response.ok) {
                         updateUserData({
                             ...userData,
-                            wallet: address
+                            wallet: addressToSave
                         });
+                        console.log("Wallet address updated successfully:", addressToSave);
                     } else {
                         console.error('Error updating wallet:', result.error);
                     }
@@ -92,7 +132,7 @@ function Profile({ userData, updateUserData }) {
                 unsubscribe();
             }
         };
-    }, [tonConnectUI, userData, updateUserData]);
+    }, [tonConnectUI, userData, updateUserData, userFriendlyAddress]); // Добавлен userFriendlyAddress в зависимости
 
     const handleConvert = async () => {
         const amount = userData?.coins || 0;
@@ -214,8 +254,9 @@ function Profile({ userData, updateUserData }) {
             if (response.ok) {
                 updateUserData(resultData.data);
                 setDepositSuccess(true);
+                startConfetti(); // Запускаем конфетти
                 
-                // Ждем 1.5 секунды перед закрытием
+                // Закрываем модальное окно сразу после успеха
                 setTimeout(() => {
                     setShowDepositModal(false);
                     setIsDepositing(false);
@@ -228,20 +269,51 @@ function Profile({ userData, updateUserData }) {
             }
 
         } catch (error) {
-            console.error('Error sending TON:', error);
-            alert('Error sending TON: ' + error.message);
+            // Не показываем console.warn при отмене пользователем
+            if (!error.message?.includes('User rejected the transaction') && 
+                !error.message?.includes('User cancelled') &&
+                !error.message?.includes('Cancelled by user')) {
+                console.error('Error sending TON:', error);
+                alert('Error sending TON: ' + error.message);
+            }
             setIsDepositing(false);
         }
     };
 
     return (
         <div className="profile-container">
+            {showConfetti && (
+                <div style={{
+                    opacity: confettiOpacity,
+                    transition: 'opacity 1s ease-out',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    pointerEvents: 'none',
+                    zIndex: 9999
+                }}>
+                    <Confetti
+                        width={windowDimensions.width}
+                        height={windowDimensions.height}
+                        numberOfPieces={300}
+                        gravity={0.5}
+                        initialVelocityY={15}
+                        recycle={false}
+                        run={showConfetti}
+                        colors={['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']}
+                    />
+                </div>
+            )}
+
             <BalanceSection userData={userData} />
             
             <UserSection 
                 userData={userData}
                 walletConnected={walletConnected}
                 setWalletConnected={setWalletConnected}
+                userFriendlyAddress={userFriendlyAddress}
             />
 
             <div className="wallet-interface">
