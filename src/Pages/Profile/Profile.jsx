@@ -234,8 +234,8 @@ function Profile({ userData, updateUserData }) {
             setWithdrawSuccess(false);
             
             try {
-                // Отправляем запрос на обработку вывода
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/process-withdraw', {
+                // Отправляем запрос только на уведомление (без изменения баланса)
+                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/withdraw-notification', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -250,10 +250,8 @@ function Profile({ userData, updateUserData }) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Обновляем данные пользователя
-                    updateUserData(result.data);
                     setWithdrawSuccess(true);
-                    startConfetti(); // Добавляем конфетти для вывода
+                    startConfetti();
                     
                     // Ждем 1.5 секунды перед закрытием
                     setTimeout(() => {
@@ -262,11 +260,11 @@ function Profile({ userData, updateUserData }) {
                         setShowWithdrawModal(false);
                     }, 1500);
                 } else {
-                    console.error('Error processing withdrawal:', result.error);
+                    console.error('Error sending withdrawal notification:', result.error);
                     setIsWithdrawing(false);
                 }
             } catch (error) {
-                console.error('Error processing withdrawal:', error);
+                console.error('Error sending withdrawal notification:', error);
                 setIsWithdrawing(false);
             }
         }

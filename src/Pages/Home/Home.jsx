@@ -5,24 +5,23 @@ import BalanceSection from './Components/Balance/BalanceSection';
 import BetResultAndInstruction from './Components/BetResultAndInstruction/BetResultAndInstruction';
 import BetModal from './Components/Modals/BetModal';
 import InstructionsModal from './Components/Modals/InstructionsModal';
-
 import './Home.css';
 
-// Константы с уменьшенными шансами выигрышных комбинаций
+// ОБНОВЛЕННЫЕ КОНСТАНТЫ С УМЕНЬШЕННЫМИ ШАНСАМИ ВЫИГРЫША
 const SYMBOLS_CONFIG = [
-  { id: 1, symbol: '🍒', name: 'Cherry', weight: 40, type: 'fruit' },
-  { id: 2, symbol: '🍋', name: 'Lemon', weight: 35, type: 'fruit' },
-  { id: 3, symbol: '🍊', name: 'Orange', weight: 30, type: 'fruit' },
-  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 25, type: 'fruit' },
-  { id: 5, symbol: '🔔', name: 'Bell', weight: 12, type: 'bell' },
-  { id: 6, symbol: '⭐', name: 'Star', weight: 10, type: 'star' },
-  { id: 7, symbol: '🍇', name: 'Grapes', weight: 15, type: 'fruit' },
-  { id: 8, symbol: '🔶', name: 'Diamond', weight: 6, type: 'diamond' },
-  { id: 9, symbol: '⑦', name: 'Seven', weight: 4, type: 'seven' },
-  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 2, type: 'premium' },
-  { id: 11, symbol: '👑', name: 'Crown', weight: 1, type: 'premium' },
-  { id: 12, symbol: '💀', name: 'Skull', weight: 8, type: 'skull' },
-  { id: 13, symbol: '🔥', name: 'Fire', weight: 1, type: 'special' }
+  { id: 1, symbol: '🍒', name: 'Cherry', weight: 60, type: 'fruit' },
+  { id: 2, symbol: '🍋', name: 'Lemon', weight: 55, type: 'fruit' },
+  { id: 3, symbol: '🍊', name: 'Orange', weight: 50, type: 'fruit' },
+  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 45, type: 'fruit' },
+  { id: 5, symbol: '🔔', name: 'Bell', weight: 25, type: 'bell' },
+  { id: 6, symbol: '⭐', name: 'Star', weight: 20, type: 'star' },
+  { id: 7, symbol: '🍇', name: 'Grapes', weight: 35, type: 'fruit' },
+  { id: 8, symbol: '🔶', name: 'Diamond', weight: 10, type: 'diamond' },
+  { id: 9, symbol: '⑦', name: 'Seven', weight: 6, type: 'seven' },
+  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 3, type: 'premium' },
+  { id: 11, symbol: '👑', name: 'Crown', weight: 2, type: 'premium' },
+  { id: 12, symbol: '💀', name: 'Skull', weight: 20, type: 'skull' }, // Увеличен вес проигрышного символа
+  { id: 13, symbol: '🔥', name: 'Fire', weight: 2, type: 'special' }
 ];
 
 const getWinForCombination = (symbols) => {
@@ -30,70 +29,75 @@ const getWinForCombination = (symbols) => {
   
   console.log('🎰 Проверка выигрыша для комбинации:', symbols.join(' '));
   
-  // 1. ТРОЙНЫЕ КОМБИНАЦИИ
+  // 1. ТРОЙНЫЕ КОМБИНАЦИИ (уменьшены шансы)
   if (a === b && b === c) {
     const tripleWins = {
-      '🍒': { multiplier: 3, name: 'TRIPLE CHERRY' },
-      '🍋': { multiplier: 4, name: 'TRIPLE LEMON' },
-      '🍊': { multiplier: 5, name: 'TRIPLE ORANGE' },
-      '🍉': { multiplier: 6, name: 'TRIPLE WATERMELON' },
-      '🔔': { multiplier: 8, name: 'TRIPLE BELL' },
-      '⭐': { multiplier: 7, name: 'TRIPLE STAR' },
-      '🍇': { multiplier: 5, name: 'TRIPLE GRAPES' },
-      '🔶': { multiplier: 10, name: 'TRIPLE DIAMOND' },
-      '⑦': { multiplier: 12, name: 'TRIPLE SEVEN' },
-      '💎': { multiplier: 50, name: 'DIAMOND JACKPOT' },
-      '👑': { multiplier: 25, name: 'CROWN JACKPOT' },
+      '🍒': { multiplier: 2, name: 'TRIPLE CHERRY' }, // уменьшено с 3
+      '🍋': { multiplier: 3, name: 'TRIPLE LEMON' }, // уменьшено с 4
+      '🍊': { multiplier: 3, name: 'TRIPLE ORANGE' }, // уменьшено с 5
+      '🍉': { multiplier: 4, name: 'TRIPLE WATERMELON' }, // уменьшено с 6
+      '🔔': { multiplier: 5, name: 'TRIPLE BELL' }, // уменьшено с 8
+      '⭐': { multiplier: 4, name: 'TRIPLE STAR' }, // уменьшено с 7
+      '🍇': { multiplier: 3, name: 'TRIPLE GRAPES' }, // уменьшено с 5
+      '🔶': { multiplier: 6, name: 'TRIPLE DIAMOND' }, // уменьшено с 10
+      '⑦': { multiplier: 8, name: 'TRIPLE SEVEN' }, // уменьшено с 12
+      '💎': { multiplier: 25, name: 'DIAMOND JACKPOT' }, // уменьшено с 50
+      '👑': { multiplier: 15, name: 'CROWN JACKPOT' }, // уменьшено с 25
       '💀': { multiplier: 0, name: 'SKULL BUST' },
-      '🔥': { multiplier: 15, name: 'FIRE BONUS' }
+      '🔥': { multiplier: 10, name: 'FIRE BONUS' } // уменьшено с 15
     };
     return tripleWins[a] || null;
   }
   
   // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ (уменьшены множители)
-  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 8, name: 'DIAMOND STAR' };
-  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 6, name: 'CROWN STAR' };
-  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 5, name: 'SEVEN STAR' };
-  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 4, name: 'BELL STAR' };
+  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 5, name: 'DIAMOND STAR' }; // уменьшено с 8
+  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 4, name: 'CROWN STAR' }; // уменьшено с 6
+  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 3, name: 'SEVEN STAR' }; // уменьшено с 5
+  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 2.5, name: 'BELL STAR' }; // уменьшено с 4
   
-  // 3. ДВОЙНЫЕ КОМБИНАЦИИ (уменьшены множители)
+  // 3. ДВОЙНЫЕ КОМБИНАЦИИ (уменьшены множители и добавлены ограничения)
   if (a === b || a === c || b === c) {
     let doubleSymbol;
     if (a === b) doubleSymbol = a;
     else if (a === c) doubleSymbol = a;
     else doubleSymbol = b;
     
+    // УСЛОВИЕ: для некоторых символов двойные комбинации не считаются выигрышными
+    if (doubleSymbol === '🍒' || doubleSymbol === '🍋' || doubleSymbol === '🍊') {
+      // Для базовых фруктов двойные комбинации не приносят выигрыша
+      return null;
+    }
+    
     const doubleWins = {
-      '🍒': { multiplier: 1, name: 'DOUBLE CHERRY' },
-      '🍋': { multiplier: 1, name: 'DOUBLE LEMON' },
-      '🍊': { multiplier: 1, name: 'DOUBLE ORANGE' },
-      '🍉': { multiplier: 1, name: 'DOUBLE WATERMELON' },
-      '🔔': { multiplier: 1.5, name: 'DOUBLE BELL' },
-      '⭐': { multiplier: 1, name: 'DOUBLE STAR' },
-      '🍇': { multiplier: 1, name: 'DOUBLE GRAPES' },
-      '🔶': { multiplier: 2, name: 'DOUBLE DIAMOND' },
-      '⑦': { multiplier: 2.5, name: 'DOUBLE SEVEN' },
-      '💎': { multiplier: 4, name: 'DOUBLE PREMIUM DIAMOND' },
-      '👑': { multiplier: 3, name: 'DOUBLE CROWN' },
+      '🍉': { multiplier: 0.5, name: 'DOUBLE WATERMELON' }, // уменьшено с 1
+      '🔔': { multiplier: 1, name: 'DOUBLE BELL' }, // уменьшено с 1.5
+      '⭐': { multiplier: 0.5, name: 'DOUBLE STAR' }, // уменьшено с 1
+      '🍇': { multiplier: 0.5, name: 'DOUBLE GRAPES' }, // уменьшено с 1
+      '🔶': { multiplier: 1, name: 'DOUBLE DIAMOND' }, // уменьшено с 2
+      '⑦': { multiplier: 1.5, name: 'DOUBLE SEVEN' }, // уменьшено с 2.5
+      '💎': { multiplier: 2, name: 'DOUBLE PREMIUM DIAMOND' }, // уменьшено с 4
+      '👑': { multiplier: 1.5, name: 'DOUBLE CROWN' }, // уменьшено с 3
       '💀': { multiplier: 0, name: 'DOUBLE SKULL' },
-      '🔥': { multiplier: 2, name: 'DOUBLE FIRE' }
+      '🔥': { multiplier: 1, name: 'DOUBLE FIRE' } // уменьшено с 2
     };
     
     return doubleWins[doubleSymbol] || null;
   }
   
-  // 4. ФРУКТОВЫЕ МИКСЫ (уменьшен множитель)
+  // 4. ФРУКТОВЫЕ МИКСЫ (уменьшен множитель и добавлено условие)
   const fruits = ['🍒', '🍋', '🍊', '🍉', '🍇'];
   const isAllFruits = fruits.includes(a) && fruits.includes(b) && fruits.includes(c);
   const uniqueFruits = new Set([a, b, c]);
   
+  // Только если все три фрукта РАЗНЫЕ
   if (isAllFruits && uniqueFruits.size === 3) {
-    return { multiplier: 1.2, name: 'FRUIT MIX' };
+    return { multiplier: 0.8, name: 'FRUIT MIX' }; // уменьшено с 1.2
   }
   
   return null;
 };
 
+// ОСТАЛЬНОЙ КОД БЕЗ ИЗМЕНЕНИЙ
 function Home({ userData, updateUserData, isActive }) {
   const [selectedOption, setSelectedOption] = useState('ton');
   const [isSpinning, setIsSpinning] = useState(false);
@@ -120,6 +124,56 @@ function Home({ userData, updateUserData, isActive }) {
     first_name: 'User',
     username: 'user'
   };
+
+  // Функция для обновления статистики
+  const updateStatisticsInDB = useCallback(async (betAmount, winAmount, isWin) => {
+    try {
+      const telegramUserId = safeUserData?.telegram_user_id;
+      
+      if (!telegramUserId) {
+        console.error('❌ No telegram user ID found');
+        return { success: false, error: 'No telegram user ID found' };
+      }
+
+      console.log('📊 Updating statistics:', { betAmount, winAmount, isWin });
+
+      const UPDATE_STATISTICS_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/update-statistics';
+      
+      const response = await fetch(UPDATE_STATISTICS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          telegramUserId: telegramUserId,
+          betAmount: parseFloat(betAmount),
+          winAmount: parseFloat(winAmount),
+          isWin: isWin
+        }),
+      });
+
+      console.log('📥 Statistics response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('📦 Statistics response data:', data);
+      
+      if (data.success) {
+        console.log('✅ Statistics updated successfully');
+        return { success: true };
+      } else {
+        console.error('❌ Error from update-statistics function:', data.error);
+        return { success: false, error: data.error };
+      }
+    } catch (error) {
+      console.error('❌ Error updating statistics:', error);
+      return { success: false, error: error.message };
+    }
+  }, [safeUserData]);
 
   // Функция для увеличения bet_amount в базе данных
   const updateBetAmountInDB = useCallback(async (amount) => {
@@ -374,24 +428,35 @@ function Home({ userData, updateUserData, isActive }) {
           
           const processResult = async () => {
             try {
+              let winAmount = 0;
+              let isWin = false;
+              let netWin = 0;
+
               if (winCombination) {
                 if (winCombination.multiplier === 0) {
                   // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
                   setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
                   await updateTonAmountInDB(-betAmount);
+                  // Обновляем статистику - проигрыш
+                  await updateStatisticsInDB(betAmount, 0, false);
                 } else {
                   // ВЫИГРЫШ - увеличиваем TON баланс на чистый выигрыш
-                  const winAmount = winCombination.multiplier * betAmount;
-                  const netWin = winAmount - betAmount; // Чистый выигрыш
+                  winAmount = winCombination.multiplier * betAmount;
+                  netWin = winAmount - betAmount; // Чистый выигрыш
                   setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
                   
                   await updateTonAmountInDB(netWin);
+                  // Обновляем статистику - выигрыш
+                  await updateStatisticsInDB(betAmount, winAmount, true);
                   startConfetti();
+                  isWin = true;
                 }
               } else {
                 // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
                 setBetResult('No win this time. Try again!');
                 await updateTonAmountInDB(-betAmount);
+                // Обновляем статистику - проигрыш
+                await updateStatisticsInDB(betAmount, 0, false);
               }
               
               // 3. Увеличиваем coins на 50 после прокрутки
@@ -431,7 +496,8 @@ function Home({ userData, updateUserData, isActive }) {
     startConfetti,
     updateBetAmountInDB,
     updateTonAmountInDB,
-    updateCoinsInDB
+    updateCoinsInDB,
+    updateStatisticsInDB
   ]);
 
   // Очистка анимации при размонтировании

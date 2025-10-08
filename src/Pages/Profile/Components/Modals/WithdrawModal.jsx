@@ -17,22 +17,18 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
         );
     };
 
-    // Исправленный useEffect для загрузки адреса кошелька
     useEffect(() => {
         if (show && userData?.wallet) {
             const wallet = userData.wallet;
-            // Проверяем, что wallet не равен "no wallet" или другим невалидным значениям
             if (wallet && wallet !== "no wallet" && wallet !== "" && wallet !== "undefined") {
                 setWalletAddress(wallet);
             }
         }
     }, [show, userData?.wallet]);
 
-    // Сброс состояний при закрытии
     useEffect(() => {
         if (!show) {
             setWithdrawAmount('');
-            // Не сбрасываем walletAddress при закрытии, чтобы сохранить введенный адрес
         }
     }, [show]);
 
@@ -123,7 +119,10 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                                 withdrawSuccess ? (
                                     'Success!'
                                 ) : (
-                                    <div className="spinner"></div>
+                                    <>
+                                        <div className="spinner"></div>
+                                        Processing...
+                                    </>
                                 )
                             ) : (
                                 'WITHDRAW TON'
