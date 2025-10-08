@@ -17,9 +17,14 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
         );
     };
 
+    // Исправленный useEffect для загрузки адреса кошелька
     useEffect(() => {
-        if (show && userData?.wallet && userData.wallet !== "no wallet") {
-            setWalletAddress(userData.wallet);
+        if (show && userData?.wallet) {
+            const wallet = userData.wallet;
+            // Проверяем, что wallet не равен "no wallet" или другим невалидным значениям
+            if (wallet && wallet !== "no wallet" && wallet !== "" && wallet !== "undefined") {
+                setWalletAddress(wallet);
+            }
         }
     }, [show, userData?.wallet]);
 
@@ -27,7 +32,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
     useEffect(() => {
         if (!show) {
             setWithdrawAmount('');
-            setWalletAddress('');
+            // Не сбрасываем walletAddress при закрытии, чтобы сохранить введенный адрес
         }
     }, [show]);
 
@@ -70,7 +75,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                         <div className="balance-content-with-logo">
                             <TonLogoIcon size={32} className="ton-logo-align" />
                             <div className="convert-balance-amount withdraw-balance-amount">
-                                {userData?.ton_amount?.toFixed(2) || '0.00'} TON
+                                {userData?.ton_amount?.toFixed(3) || '0.000'} TON
                             </div>
                         </div>
                         <div className="convert-conversion-info">Available for withdrawal</div>

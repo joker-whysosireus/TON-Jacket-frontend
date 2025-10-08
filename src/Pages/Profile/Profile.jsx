@@ -85,18 +85,29 @@ function Profile({ userData, updateUserData }) {
         return () => unsubscribe();
     }, [tonConnectUI, rawAddress]);
 
-    // Listen for wallet connection to update userData
+    // Listen for wallet connection to update userData - ИСПРАВЛЕННЫЙ useEffect
     useEffect(() => {
         let unsubscribe;
         
         const handleStatusChange = async (walletInfo) => {
             if (walletInfo && userData) {
                 try {
+                    // Используем user-friendly адрес для сохранения в базу данных
                     const addressToSave = userFriendlyAddress;
                     
-                    if (!addressToSave || addressToSave === '') {
+                    // Проверяем, что адрес валидный и не пустой
+                    if (!addressToSave || addressToSave === '' || addressToSave === 'undefined') {
+                        console.log("Invalid wallet address, skipping save");
                         return;
                     }
+
+                    // Проверяем, не совпадает ли текущий адрес с уже сохраненным
+                    if (userData.wallet === addressToSave) {
+                        console.log("Wallet address already up to date");
+                        return;
+                    }
+
+                    console.log("Saving wallet address to database:", addressToSave);
 
                     const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/updateWallet', {
                         method: 'POST',
@@ -112,17 +123,25 @@ function Profile({ userData, updateUserData }) {
                     const result = await response.json();
                     
                     if (response.ok) {
+                        console.log("Wallet address updated successfully in database");
                         updateUserData({
                             ...userData,
                             wallet: addressToSave
                         });
+                    } else {
+                        console.error('Error updating wallet in database:', result.error);
                     }
                 } catch (error) {
-                    // console.error removed as requested
+                    console.error('Error updating wallet:', error);
                 }
+            } else if (!walletInfo && userData) {
+                // Если кошелек отключен, обновляем состояние
+                console.log("Wallet disconnected");
+                setWalletConnected(false);
             }
         };
 
+        // Подписываемся на изменения статуса кошелька
         if (tonConnectUI && typeof tonConnectUI.onStatusChange === 'function') {
             unsubscribe = tonConnectUI.onStatusChange(handleStatusChange);
         }
@@ -132,7 +151,42 @@ function Profile({ userData, updateUserData }) {
                 unsubscribe();
             }
         };
-    }, [tonConnectUI, userData, updateUserData, userFriendlyAddress, rawAddress]);
+    }, [tonConnectUI, userData, updateUserData, userFriendlyAddress]);
+
+    // Дополнительный useEffect для обработки начального подключения
+    useEffect(() => {
+        if (userFriendlyAddress && userFriendlyAddress !== '' && userData && userData.wallet !== userFriendlyAddress) {
+            console.log("Initial wallet connection detected, updating...");
+            const updateWallet = async () => {
+                try {
+                    const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/updateWallet', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: userData.telegram_user_id,
+                            walletAddress: userFriendlyAddress
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        console.log("Initial wallet address saved successfully");
+                        updateUserData({
+                            ...userData,
+                            wallet: userFriendlyAddress
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error saving initial wallet:', error);
+                }
+            };
+            
+            updateWallet();
+        }
+    }, [userFriendlyAddress, userData, updateUserData]);
 
     const handleConvert = async () => {
         const amount = userData?.coins || 0;
@@ -179,26 +233,42 @@ function Profile({ userData, updateUserData }) {
             setIsWithdrawing(true);
             setWithdrawSuccess(false);
             
-            // Симуляция обработки вывода
-            setTimeout(() => {
-                const newTonAmount = userData.ton_amount - parseFloat(withdrawAmount);
-                const newWithdrawAmount = userData.withdraw_amount + parseFloat(withdrawAmount);
-                
-                updateUserData({
-                    ...userData,
-                    ton_amount: newTonAmount,
-                    withdraw_amount: newWithdrawAmount
+            try {
+                // Отправляем запрос на обработку вывода
+                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/process-withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: userData.telegram_user_id,
+                        amount: parseFloat(withdrawAmount),
+                        walletAddress: walletAddress
+                    })
                 });
 
-                setWithdrawSuccess(true);
-                startConfetti(); // Добавляем конфетти для вывода
+                const result = await response.json();
                 
-                setTimeout(() => {
+                if (response.ok) {
+                    // Обновляем данные пользователя
+                    updateUserData(result.data);
+                    setWithdrawSuccess(true);
+                    startConfetti(); // Добавляем конфетти для вывода
+                    
+                    // Ждем 1.5 секунды перед закрытием
+                    setTimeout(() => {
+                        setIsWithdrawing(false);
+                        setWithdrawSuccess(false);
+                        setShowWithdrawModal(false);
+                    }, 1500);
+                } else {
+                    console.error('Error processing withdrawal:', result.error);
                     setIsWithdrawing(false);
-                    setWithdrawSuccess(false);
-                    setShowWithdrawModal(false);
-                }, 1500);
-            }, 2000);
+                }
+            } catch (error) {
+                console.error('Error processing withdrawal:', error);
+                setIsWithdrawing(false);
+            }
         }
     };
 
