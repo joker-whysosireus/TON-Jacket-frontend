@@ -9,14 +9,15 @@
 
 .menu {
   position: fixed;
-  background: #000000;
-  bottom: 0; /* Подняли меню на 5px вверх */
+  background: rgba(0, 0, 0, 0.8); /* полупрозрачный черный */
+  bottom: 0;
   left: 0;
   right: 0;
   display: flex;
   justify-content: space-between;
   padding: 5px 10px;
   z-index: 10;
+  backdrop-filter: blur(10px); /* дополнительный эффект размытия фона */
 }
 
 .menu-item {
