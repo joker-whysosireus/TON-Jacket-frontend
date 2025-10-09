@@ -31,7 +31,7 @@ const Menu = () => {
               </span>
           </Link>
         </div>
-         <div className={`menu-item ${currentPath === '/gifts' ? 'active' : ''}`}>
+        <div className={`menu-item ${currentPath === '/gifts' ? 'active' : ''}`}>
           <Link to="/gifts" onClick={handleClick('/gifts')}>
             {currentPath === '/gifts' ? <GiftTwo /> : <GiftOne />}
             <span className="Name">

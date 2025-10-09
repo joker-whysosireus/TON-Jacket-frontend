@@ -23,29 +23,31 @@ function Friends({ userData, updateUserData }) {
             {/* Секция с информацией о друзьях */}
             <div className="friends-info-section">
                 <div className="handshake-emoji">🤝</div>
-                <div className="invited-friends-count">
-                    <span className="count-number">{userData?.invited_friends || 0}</span>
-                    <span className="count-label"> Friend(s)</span>
-                </div>
                 <div className="invite-description">
-                    Invite your friends to get more coins, which you can transfer to TON for free spins!
+                    <p className="description-line">Invite your friends to get more coins,</p>
+                    <p className="description-line">which you can transfer to TON for free spins!</p>
+                    <p className="description-line">The more friends you invite, the more coins you get!</p>
                 </div>
             </div>
 
-            {/* Секция с коинами и кнопкой */}
-            <div className="coins-button-section">
-                <div className="coins-for-invite-section">
-                    <div className="coins-amount">
-                        🏅{userData?.coins_for_invite?.toFixed(3) || '0.000'}
-                    </div>
-                    <div className="coins-label">
-                        Coins from Invites
-                    </div>
+            {/* Секция с коинами и количеством друзей */}
+            <div className="stats-section">
+                <div className="stat-item">
+                    <div className="stat-value">🏅{userData?.coins_for_invite?.toFixed(3) || '0.000'}</div>
+                    <div className="stat-label">Coins from Invites</div>
                 </div>
+                
+                <div className="stat-divider"></div>
+                
+                <div className="stat-item">
+                    <div className="stat-value">{userData?.invited_friends || 0}</div>
+                    <div className="stat-label">Friends Invited</div>
+                </div>
+            </div>
 
-                <div className='Container-button'>
-                    <button className='Invite-button' onClick={handleInviteClick}>INVITE FRIENDS</button>
-                </div>
+            {/* Кнопка приглашения */}
+            <div className='button-section'>
+                <button className='Invite-button' onClick={handleInviteClick}>INVITE FRIENDS</button>
             </div>
             
             <Menu />
