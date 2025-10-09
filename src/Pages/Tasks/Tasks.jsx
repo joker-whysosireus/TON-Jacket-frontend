@@ -7,6 +7,20 @@ import './Tasks.css';
 
 function Tasks({ userData, updateUserData }) {
   const [tasks, setTasks] = useState([]);
+  const [buttonStates, setButtonStates] = useState({});
+
+  // Load button states from localStorage on component mount
+  useEffect(() => {
+    const savedButtonStates = localStorage.getItem('taskButtonStates');
+    if (savedButtonStates) {
+      setButtonStates(JSON.parse(savedButtonStates));
+    }
+  }, []);
+
+  // Save button states to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('taskButtonStates', JSON.stringify(buttonStates));
+  }, [buttonStates]);
 
   useEffect(() => {
     const taskList = [
@@ -18,7 +32,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: userData?.claimed_tasks?.includes(0) || false,
+        completed: userData?.claimed_tasks?.includes(0) || buttonStates[0] === 'claimed' || false,
         buttonText: 'Watch'
       },
       {
@@ -29,7 +43,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 100,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: userData?.claimed_tasks?.includes(1) || false,
+        completed: userData?.claimed_tasks?.includes(1) || buttonStates[1] === 'claimed' || false,
         buttonText: 'Subscribe'
       },
       {
@@ -40,7 +54,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 250,
         requiredAmount: 5,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(2) || false,
+        completed: userData?.claimed_tasks?.includes(2) || buttonStates[2] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
@@ -51,7 +65,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 10,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(3) || false,
+        completed: userData?.claimed_tasks?.includes(3) || buttonStates[3] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
@@ -62,7 +76,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 1500,
         requiredAmount: 25,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(4) || false,
+        completed: userData?.claimed_tasks?.includes(4) || buttonStates[4] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
@@ -73,46 +87,46 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 3000,
         requiredAmount: 50,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(5) || false,
+        completed: userData?.claimed_tasks?.includes(5) || buttonStates[5] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
         id: 6,
         type: 'bet',
         title: 'Make a bet of 5 TON',
-        reward: '+100 coins',
-        rewardAmount: 100,
+        reward: '+1000 coins',
+        rewardAmount: 1000,
         requiredAmount: 5,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(6) || false,
+        completed: userData?.claimed_tasks?.includes(6) || buttonStates[6] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
         id: 7,
         type: 'bet',
         title: 'Make a bet of 25 TON',
-        reward: '+500 coins',
-        rewardAmount: 500,
+        reward: '+5000 coins',
+        rewardAmount: 5000,
         requiredAmount: 25,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(7) || false,
+        completed: userData?.claimed_tasks?.includes(7) || buttonStates[7] === 'claimed' || false,
         buttonText: 'Get'
       },
       {
         id: 8,
         type: 'bet',
         title: 'Make a bet of 50 TON',
-        reward: '+1000 coins',
-        rewardAmount: 1000,
+        reward: '+10000 coins',
+        rewardAmount: 10000,
         requiredAmount: 50,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(8) || false,
+        completed: userData?.claimed_tasks?.includes(8) || buttonStates[8] === 'claimed' || false,
         buttonText: 'Get'
       }
     ];
 
     setTasks(taskList);
-  }, [userData]);
+  }, [userData, buttonStates]);
 
   const handleTaskAction = async (task) => {
     const buttonState = getButtonState(task);
@@ -133,8 +147,17 @@ function Tasks({ userData, updateUserData }) {
 
         if (response.ok) {
           const result = await response.json();
+          
+          // Update button state in localStorage immediately
+          setButtonStates(prev => ({
+            ...prev,
+            [task.id]: 'claimed'
+          }));
+          
+          // Update user data from server response
           updateUserData(result.userData);
           
+          // For subscription task, open channel after claiming reward
           if (task.type === 'subscribe') {
             window.open('https://t.me/ton_mania_channel', '_blank');
           } else if (task.type === 'ad') {
@@ -150,6 +173,12 @@ function Tasks({ userData, updateUserData }) {
   };
 
   const getButtonState = (task) => {
+    // Check localStorage first, then userData
+    const localStorageState = buttonStates[task.id];
+    if (localStorageState === 'claimed') {
+      return 'claimed';
+    }
+    
     if (task.completed) {
       return 'claimed';
     } else if (task.type === 'ad' || task.type === 'subscribe') {
