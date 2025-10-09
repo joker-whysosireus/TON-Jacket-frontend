@@ -235,7 +235,7 @@ function Profile({ userData, updateUserData }) {
             
             try {
                 // Отправляем запрос только на уведомление (без изменения баланса)
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/withdraw-notification', {
+                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/process-withdraw', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
