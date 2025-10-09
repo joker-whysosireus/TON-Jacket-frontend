@@ -7,20 +7,15 @@ import './Tasks.css';
 
 function Tasks({ userData, updateUserData }) {
   const [tasks, setTasks] = useState([]);
-  const [buttonStates, setButtonStates] = useState({});
+  const [taskStates, setTaskStates] = useState(() => {
+    const storedTasks = localStorage.getItem('taskStates');
+    return storedTasks ? JSON.parse(storedTasks) : {};
+  });
 
-  // Load button states from localStorage on component mount
+  // Сохраняем состояния задач в localStorage при изменении
   useEffect(() => {
-    const savedButtonStates = localStorage.getItem('taskButtonStates');
-    if (savedButtonStates) {
-      setButtonStates(JSON.parse(savedButtonStates));
-    }
-  }, []);
-
-  // Save button states to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('taskButtonStates', JSON.stringify(buttonStates));
-  }, [buttonStates]);
+    localStorage.setItem('taskStates', JSON.stringify(taskStates));
+  }, [taskStates]);
 
   useEffect(() => {
     const taskList = [
@@ -32,7 +27,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: userData?.claimed_tasks?.includes(0) || buttonStates[0] === 'claimed' || false,
+        completed: taskStates[0] || false,
         buttonText: 'Watch'
       },
       {
@@ -43,7 +38,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 100,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: userData?.claimed_tasks?.includes(1) || buttonStates[1] === 'claimed' || false,
+        completed: taskStates[1] || false,
         buttonText: 'Subscribe'
       },
       {
@@ -54,7 +49,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 250,
         requiredAmount: 5,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(2) || buttonStates[2] === 'claimed' || false,
+        completed: taskStates[2] || false,
         buttonText: 'Get'
       },
       {
@@ -65,7 +60,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 10,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(3) || buttonStates[3] === 'claimed' || false,
+        completed: taskStates[3] || false,
         buttonText: 'Get'
       },
       {
@@ -76,7 +71,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 1500,
         requiredAmount: 25,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(4) || buttonStates[4] === 'claimed' || false,
+        completed: taskStates[4] || false,
         buttonText: 'Get'
       },
       {
@@ -87,7 +82,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 3000,
         requiredAmount: 50,
         currentProgress: userData?.invited_friends || 0,
-        completed: userData?.claimed_tasks?.includes(5) || buttonStates[5] === 'claimed' || false,
+        completed: taskStates[5] || false,
         buttonText: 'Get'
       },
       {
@@ -98,7 +93,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 1000,
         requiredAmount: 5,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(6) || buttonStates[6] === 'claimed' || false,
+        completed: taskStates[6] || false,
         buttonText: 'Get'
       },
       {
@@ -109,7 +104,7 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 5000,
         requiredAmount: 25,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(7) || buttonStates[7] === 'claimed' || false,
+        completed: taskStates[7] || false,
         buttonText: 'Get'
       },
       {
@@ -120,65 +115,73 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 10000,
         requiredAmount: 50,
         currentProgress: userData?.bet_amount || 0,
-        completed: userData?.claimed_tasks?.includes(8) || buttonStates[8] === 'claimed' || false,
+        completed: taskStates[8] || false,
         buttonText: 'Get'
       }
     ];
 
     setTasks(taskList);
-  }, [userData, buttonStates]);
+  }, [userData, taskStates]);
 
   const handleTaskAction = async (task) => {
     const buttonState = getButtonState(task);
     
-    if (buttonState === 'completed' || buttonState === 'active') {
-      try {
-        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            taskId: task.id,
-            rewardAmount: task.rewardAmount,
-            telegramUserId: userData.telegram_user_id
-          })
-        });
+    // Для задач friends и bet проверяем, выполнены ли условия
+    if ((task.type === 'friends' || task.type === 'bet') && buttonState === 'completed') {
+      // Условия выполнены, можно выдавать награду
+      await claimTaskReward(task);
+    } else if ((task.type === 'ad' || task.type === 'subscribe') && 
+               (buttonState === 'active' || buttonState === 'completed')) {
+      // Для ad и subscribe задач выдаем награду сразу
+      await claimTaskReward(task);
+    }
+  };
 
-        if (response.ok) {
-          const result = await response.json();
-          
-          // Update button state in localStorage immediately
-          setButtonStates(prev => ({
-            ...prev,
-            [task.id]: 'claimed'
-          }));
-          
-          // Update user data from server response
-          updateUserData(result.userData);
-          
-          // For subscription task, open channel after claiming reward
-          if (task.type === 'subscribe') {
-            window.open('https://t.me/ton_mania_channel', '_blank');
-          } else if (task.type === 'ad') {
-            console.log('Showing ad...');
-          }
-        } else {
-          console.error('Failed to claim task reward');
-        }
-      } catch (error) {
-        console.error('Error claiming task reward:', error);
+  const claimTaskReward = async (task) => {
+    // Сразу обновляем локальное состояние
+    const updatedTaskStates = { ...taskStates, [task.id]: true };
+    setTaskStates(updatedTaskStates);
+    
+    // Для подписки на канал - сразу открываем ссылку
+    if (task.type === 'subscribe') {
+      window.open('https://t.me/ton_mania_channel', '_blank');
+    } else if (task.type === 'ad') {
+      console.log('Showing ad...');
+    }
+    
+    // Затем отправляем запрос на сервер
+    try {
+      const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          taskId: task.id,
+          rewardAmount: task.rewardAmount,
+          telegramUserId: userData.telegram_user_id
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Всегда обновляем userData
+        updateUserData(result.userData);
+      } else {
+        console.error('Failed to claim task reward');
+        // В случае ошибки откатываем состояние
+        const revertedTaskStates = { ...taskStates };
+        setTaskStates(revertedTaskStates);
       }
+    } catch (error) {
+      console.error('Error claiming task reward:', error);
+      // В случае ошибки откатываем состояние
+      const revertedTaskStates = { ...taskStates };
+      setTaskStates(revertedTaskStates);
     }
   };
 
   const getButtonState = (task) => {
-    // Check localStorage first, then userData
-    const localStorageState = buttonStates[task.id];
-    if (localStorageState === 'claimed') {
-      return 'claimed';
-    }
-    
     if (task.completed) {
       return 'claimed';
     } else if (task.type === 'ad' || task.type === 'subscribe') {
@@ -195,7 +198,7 @@ function Tasks({ userData, updateUserData }) {
     
     switch (state) {
       case 'claimed':
-        return '✓';
+        return 'Done!';
       case 'completed':
         return task.buttonText;
       case 'active':
