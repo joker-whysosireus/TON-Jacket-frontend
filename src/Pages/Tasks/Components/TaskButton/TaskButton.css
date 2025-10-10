@@ -16,6 +16,7 @@
 .task-action-btn.incomplete {
   background: #666;
   color: #ccc;
+  cursor: not-allowed;
 }
 
 .task-action-btn.completed {
@@ -41,7 +42,7 @@
   width: 72px;
 }
 
-.task-action-btn:not(.claimed):hover {
+.task-action-btn:not(.incomplete):not(.claimed):hover {
   opacity: 0.8;
   transform: scale(1.05);
 }

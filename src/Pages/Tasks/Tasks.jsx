@@ -89,8 +89,8 @@ function Tasks({ userData, updateUserData }) {
         id: 6,
         type: 'bet',
         title: 'Make a bet of 5 TON',
-        reward: '+1000 coins',
-        rewardAmount: 1000,
+        reward: '+100 coins',
+        rewardAmount: 100,
         requiredAmount: 5,
         currentProgress: userData?.bet_amount || 0,
         completed: taskStates[6] || false,
@@ -100,8 +100,8 @@ function Tasks({ userData, updateUserData }) {
         id: 7,
         type: 'bet',
         title: 'Make a bet of 25 TON',
-        reward: '+5000 coins',
-        rewardAmount: 5000,
+        reward: '+500 coins',
+        rewardAmount: 500,
         requiredAmount: 25,
         currentProgress: userData?.bet_amount || 0,
         completed: taskStates[7] || false,
@@ -111,8 +111,8 @@ function Tasks({ userData, updateUserData }) {
         id: 8,
         type: 'bet',
         title: 'Make a bet of 50 TON',
-        reward: '+10000 coins',
-        rewardAmount: 10000,
+        reward: '+1000 coins',
+        rewardAmount: 1000,
         requiredAmount: 50,
         currentProgress: userData?.bet_amount || 0,
         completed: taskStates[8] || false,
@@ -123,33 +123,19 @@ function Tasks({ userData, updateUserData }) {
     setTasks(taskList);
   }, [userData, taskStates]);
 
-  const handleTaskAction = async (task) => {
-    const buttonState = getButtonState(task);
-    
-    // Для задач friends и bet проверяем, выполнены ли условия
-    if ((task.type === 'friends' || task.type === 'bet') && buttonState === 'completed') {
-      // Условия выполнены, можно выдавать награду
-      await claimTaskReward(task);
-    } else if ((task.type === 'ad' || task.type === 'subscribe') && 
-               (buttonState === 'active' || buttonState === 'completed')) {
-      // Для ad и subscribe задач выдаем награду сразу
-      await claimTaskReward(task);
-    }
-  };
-
-  const claimTaskReward = async (task) => {
+  const handleTaskCompletion = async (task) => {
     // Сразу обновляем локальное состояние
     const updatedTaskStates = { ...taskStates, [task.id]: true };
     setTaskStates(updatedTaskStates);
+    localStorage.setItem('taskStates', JSON.stringify(updatedTaskStates));
     
-    // Для подписки на канал - сразу открываем ссылку
+    // Для подписки на канал - открываем ссылку
     if (task.type === 'subscribe') {
       window.open('https://t.me/ton_mania_channel', '_blank');
     } else if (task.type === 'ad') {
       console.log('Showing ad...');
     }
     
-    // Затем отправляем запрос на сервер
     try {
       const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
         method: 'POST',
@@ -163,21 +149,22 @@ function Tasks({ userData, updateUserData }) {
         })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const result = await response.json();
-        // Всегда обновляем userData
-        updateUserData(result.userData);
+        updateUserData(data.userData);
       } else {
-        console.error('Failed to claim task reward');
         // В случае ошибки откатываем состояние
         const revertedTaskStates = { ...taskStates };
         setTaskStates(revertedTaskStates);
+        localStorage.setItem('taskStates', JSON.stringify(revertedTaskStates));
       }
     } catch (error) {
       console.error('Error claiming task reward:', error);
       // В случае ошибки откатываем состояние
       const revertedTaskStates = { ...taskStates };
       setTaskStates(revertedTaskStates);
+      localStorage.setItem('taskStates', JSON.stringify(revertedTaskStates));
     }
   };
 
@@ -217,7 +204,7 @@ function Tasks({ userData, updateUserData }) {
       <TaskHeader />
       <TaskList 
         tasks={tasks}
-        onTaskAction={handleTaskAction}
+        onTaskAction={handleTaskCompletion}
         getButtonState={getButtonState}
         getButtonContent={getButtonContent}
       />
