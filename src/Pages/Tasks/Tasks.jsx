@@ -30,8 +30,6 @@ function Tasks({ userData, updateUserData }) {
         return defaultTasks;
     });
 
-    const [logs, setLogs] = useState([]);
-
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
 
@@ -39,68 +37,44 @@ function Tasks({ userData, updateUserData }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
-    const addLog = (message) => {
-        setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-    };
-
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
-        addLog(`Начало выполнения задачи ${taskId}`);
-        
         // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-        
-        addLog(`Состояние задачи ${taskId} обновлено на true`);
 
         if (channel) {
-            addLog(`Открытие канала: ${channel}`);
             window.open(channel, '_blank');
         }
         
         try {
-            addLog(`Отправка запроса на сервер...`);
-            
-            const requestBody = {
-                taskId: taskId,
-                rewardAmount: rewardAmount,
-                telegramUserId: userData.telegram_user_id
-            };
-
-            addLog(`Данные запроса: ${JSON.stringify(requestBody)}`);
-
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestBody),
+                body: JSON.stringify({
+                    taskId: taskId,
+                    rewardAmount: rewardAmount,
+                    telegramUserId: userData.telegram_user_id
+                }),
             });
 
-            addLog(`Статус ответа: ${response.status}`);
-            addLog(`OK: ${response.ok}`);
-
             const data = await response.json();
-            addLog(`Данные ответа: ${JSON.stringify(data)}`);
 
             if (response.ok) {
-                addLog(`УСПЕХ: Задача ${taskId} выполнена!`);
                 updateUserData(data.userData);
             } else {
-                addLog(`ОШИБКА: ${data.error}`);
                 // Откатываем состояние в случае ошибки
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
                 localStorage.setItem('tasks', JSON.stringify(revertedTasks));
-                addLog(`Состояние задачи ${taskId} откачено`);
             }
         } catch (error) {
-            addLog(`ОШИБКА СЕТИ: ${error.message}`);
             // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
             setTasks(revertedTasks);
             localStorage.setItem('tasks', JSON.stringify(revertedTasks));
-            addLog(`Состояние задачи ${taskId} откачено`);
         }
     };
 
@@ -126,6 +100,22 @@ function Tasks({ userData, updateUserData }) {
         }
     };
 
+    // Функция для получения иконки задачи
+    const getTaskIcon = (task) => {
+        switch (task.type) {
+            case 'ad':
+                return '📺';
+            case 'subscribe':
+                return '📢';
+            case 'friends':
+                return '🤝';
+            case 'bet':
+                return '🎰';
+            default:
+                return '📝';
+        }
+    };
+
     const taskList = [
         {
             id: 0,
@@ -142,8 +132,8 @@ function Tasks({ userData, updateUserData }) {
             id: 1,
             type: 'subscribe',
             title: 'Subscribe to our channel',
-            reward: '+100 coins',
-            rewardAmount: 100,
+            reward: '+1000 coins',
+            rewardAmount: 1000,
             requiredAmount: 1,
             currentProgress: 0,
             buttonText: 'Subscribe',
@@ -153,8 +143,8 @@ function Tasks({ userData, updateUserData }) {
             id: 2,
             type: 'friends',
             title: 'Invite 5 friends',
-            reward: '+250 coins',
-            rewardAmount: 250,
+            reward: '+2500 coins',
+            rewardAmount: 2500,
             requiredAmount: 5,
             currentProgress: userData?.invited_friends || 0,
             buttonText: 'Get',
@@ -164,8 +154,8 @@ function Tasks({ userData, updateUserData }) {
             id: 3,
             type: 'friends',
             title: 'Invite 10 friends',
-            reward: '+500 coins',
-            rewardAmount: 500,
+            reward: '+5000 coins',
+            rewardAmount: 5000,
             requiredAmount: 10,
             currentProgress: userData?.invited_friends || 0,
             buttonText: 'Get',
@@ -197,8 +187,8 @@ function Tasks({ userData, updateUserData }) {
             id: 6,
             type: 'bet',
             title: 'Make a bet of 5 TON',
-            reward: '+100 coins',
-            rewardAmount: 100,
+            reward: '+1000 coins',
+            rewardAmount: 1000,
             requiredAmount: 5,
             currentProgress: userData?.bet_amount || 0,
             buttonText: 'Get',
@@ -208,8 +198,8 @@ function Tasks({ userData, updateUserData }) {
             id: 7,
             type: 'bet',
             title: 'Make a bet of 25 TON',
-            reward: '+500 coins',
-            rewardAmount: 500,
+            reward: '+5000 coins',
+            rewardAmount: 5000,
             requiredAmount: 25,
             currentProgress: userData?.bet_amount || 0,
             buttonText: 'Get',
@@ -219,8 +209,8 @@ function Tasks({ userData, updateUserData }) {
             id: 8,
             type: 'bet',
             title: 'Make a bet of 50 TON',
-            reward: '+1000 coins',
-            rewardAmount: 1000,
+            reward: '+10000 coins',
+            rewardAmount: 10000,
             requiredAmount: 50,
             currentProgress: userData?.bet_amount || 0,
             buttonText: 'Get',
@@ -231,7 +221,6 @@ function Tasks({ userData, updateUserData }) {
     return (
         <div className="tasks-container">
             <BalanceSection userData={userData}/>
-            
             
             {/* Заголовок */}
             <div className="tasks-header">
@@ -246,7 +235,7 @@ function Tasks({ userData, updateUserData }) {
             <div className="tasks-list-wrapper">
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
-                        const taskIcon = task.type === 'ad' ? '📺' : task.type === 'subscribe' ? '📢' : '📝';
+                        const taskIcon = getTaskIcon(task);
                         const isCompleted = tasks[task.taskKey];
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
@@ -279,22 +268,8 @@ function Tasks({ userData, updateUserData }) {
                     })}
                 </div>
                 <div className="scroll-glow"></div>
+                <Menu />
             </div>
-
-            {/* Логи для отладки */}
-            <div className="debug-logs">
-                <h3>Логи отладки:</h3>
-                <div className="logs-container">
-                    {logs.map((log, index) => (
-                        <div key={index} className="log-entry">{log}</div>
-                    ))}
-                </div>
-                <button onClick={() => setLogs([])} className="clear-logs-btn">
-                    Очистить логи
-                </button>
-            </div>
-
-            <Menu />
         </div>
     );
 }
