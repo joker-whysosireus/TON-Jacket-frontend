@@ -4,10 +4,9 @@ function TaskButton({ task, onTaskAction, getButtonState, getButtonContent }) {
   const buttonState = getButtonState(task);
   const buttonContent = getButtonContent(task);
   
-  // Определяем, должна ли кнопка быть заблокирована
-  const isDisabled = buttonState === 'incomplete' || buttonState === 'claimed';
+  // Кнопка заблокирована только в состоянии incomplete
+  const isDisabled = buttonState === 'incomplete';
 
-  // Обработчик нажатия
   const handleClick = () => {
     if (!isDisabled) {
       onTaskAction(task);
@@ -16,7 +15,7 @@ function TaskButton({ task, onTaskAction, getButtonState, getButtonContent }) {
 
   return (
     <button 
-      className={`task-action-btn ${buttonState} ${task.type}`}
+      className={`task-action-btn ${buttonState}`}
       onClick={handleClick}
       disabled={isDisabled}
     >

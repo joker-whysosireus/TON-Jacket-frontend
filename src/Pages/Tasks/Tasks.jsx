@@ -123,19 +123,25 @@ function Tasks({ userData, updateUserData }) {
     setTasks(taskList);
   }, [userData, taskStates]);
 
-  const handleTaskCompletion = async (task) => {
-    // Сразу обновляем локальное состояние
+  const handleTaskAction = async (task) => {
+    // Проверяем, можно ли выполнить задачу
+    if (task.type === 'friends' || task.type === 'bet') {
+      if (task.currentProgress < task.requiredAmount) {
+        return; // Условия не выполнены, ничего не делаем
+      }
+    }
+
+    // Сразу обновляем состояние - помечаем задачу как выполненную
     const updatedTaskStates = { ...taskStates, [task.id]: true };
     setTaskStates(updatedTaskStates);
     localStorage.setItem('taskStates', JSON.stringify(updatedTaskStates));
-    
+
     // Для подписки на канал - открываем ссылку
     if (task.type === 'subscribe') {
       window.open('https://t.me/ton_mania_channel', '_blank');
-    } else if (task.type === 'ad') {
-      console.log('Showing ad...');
     }
-    
+
+    // Отправляем запрос на сервер для получения награды
     try {
       const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
         method: 'POST',
@@ -149,11 +155,11 @@ function Tasks({ userData, updateUserData }) {
         })
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        updateUserData(data.userData);
+        const result = await response.json();
+        updateUserData(result.userData);
       } else {
+        console.error('Failed to claim task reward');
         // В случае ошибки откатываем состояние
         const revertedTaskStates = { ...taskStates };
         setTaskStates(revertedTaskStates);
@@ -204,7 +210,7 @@ function Tasks({ userData, updateUserData }) {
       <TaskHeader />
       <TaskList 
         tasks={tasks}
-        onTaskAction={handleTaskCompletion}
+        onTaskAction={handleTaskAction}
         getButtonState={getButtonState}
         getButtonContent={getButtonContent}
       />
