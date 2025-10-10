@@ -5,22 +5,21 @@ import './Tasks.css';
 
 function Tasks({ userData, updateUserData }) {
   const [tasks, setTasks] = useState([]);
+  const [taskStates, setTaskStates] = useState({});
 
-  // Загружаем состояния задач из localStorage
-  const getInitialTaskStates = () => {
-    const stored = localStorage.getItem('taskStates');
-    return stored ? JSON.parse(stored) : {};
-  };
-
-  const [taskStates, setTaskStates] = useState(getInitialTaskStates);
-
-  // Сохраняем состояния задач в localStorage при изменении
+  // Инициализируем все задачи с состоянием false
   useEffect(() => {
-    localStorage.setItem('taskStates', JSON.stringify(taskStates));
-  }, [taskStates]);
+    const initialTaskStates = {};
+    for (let i = 0; i <= 8; i++) {
+      initialTaskStates[i] = false;
+    }
+    setTaskStates(initialTaskStates);
+  }, []);
 
   // Инициализация задач
   useEffect(() => {
+    if (Object.keys(taskStates).length === 0) return;
+
     const taskList = [
       {
         id: 0,
@@ -30,7 +29,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: taskStates[0] || false,
         buttonText: 'Watch'
       },
       {
@@ -41,7 +39,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 100,
         requiredAmount: 1,
         currentProgress: 0,
-        completed: taskStates[1] || false,
         buttonText: 'Subscribe'
       },
       {
@@ -52,7 +49,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 250,
         requiredAmount: 5,
         currentProgress: userData?.invited_friends || 0,
-        completed: taskStates[2] || false,
         buttonText: 'Get'
       },
       {
@@ -63,7 +59,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 10,
         currentProgress: userData?.invited_friends || 0,
-        completed: taskStates[3] || false,
         buttonText: 'Get'
       },
       {
@@ -74,7 +69,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 1500,
         requiredAmount: 25,
         currentProgress: userData?.invited_friends || 0,
-        completed: taskStates[4] || false,
         buttonText: 'Get'
       },
       {
@@ -85,7 +79,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 3000,
         requiredAmount: 50,
         currentProgress: userData?.invited_friends || 0,
-        completed: taskStates[5] || false,
         buttonText: 'Get'
       },
       {
@@ -96,7 +89,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 100,
         requiredAmount: 5,
         currentProgress: userData?.bet_amount || 0,
-        completed: taskStates[6] || false,
         buttonText: 'Get'
       },
       {
@@ -107,7 +99,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 500,
         requiredAmount: 25,
         currentProgress: userData?.bet_amount || 0,
-        completed: taskStates[7] || false,
         buttonText: 'Get'
       },
       {
@@ -118,7 +109,6 @@ function Tasks({ userData, updateUserData }) {
         rewardAmount: 1000,
         requiredAmount: 50,
         currentProgress: userData?.bet_amount || 0,
-        completed: taskStates[8] || false,
         buttonText: 'Get'
       }
     ];
@@ -128,15 +118,26 @@ function Tasks({ userData, updateUserData }) {
 
   // Получение состояния кнопки
   const getButtonState = (task) => {
-    if (taskStates[task.id]) {
+    // Если задача уже выполнена
+    if (taskStates[task.id] === true) {
       return 'claimed';
-    } else if (task.type === 'ad' || task.type === 'subscribe') {
-      return 'active';
-    } else if (task.currentProgress >= task.requiredAmount) {
-      return 'completed';
-    } else {
-      return 'incomplete';
     }
+    
+    // Для задач друзей и ставок проверяем прогресс
+    if (task.type === 'friends' || task.type === 'bet') {
+      if (task.currentProgress >= task.requiredAmount) {
+        return 'completed';
+      } else {
+        return 'incomplete';
+      }
+    }
+    
+    // Для рекламы и подписки всегда активны
+    if (task.type === 'ad' || task.type === 'subscribe') {
+      return 'active';
+    }
+    
+    return 'incomplete';
   };
 
   // Получение текста кнопки
@@ -157,16 +158,20 @@ function Tasks({ userData, updateUserData }) {
     }
   };
 
+  // Проверка, заблокирована ли кнопка
+  const isButtonDisabled = (task) => {
+    const state = getButtonState(task);
+    return state === 'incomplete' || state === 'claimed';
+  };
+
   // Обработчик нажатия на кнопку
   const handleButtonClick = async (task) => {
-    const state = getButtonState(task);
-    
-    // Если кнопка неактивна - ничего не делаем
-    if (state === 'incomplete') {
+    // Если кнопка заблокирована - ничего не делаем
+    if (isButtonDisabled(task)) {
       return;
     }
 
-    // Сразу обновляем состояние на "выполнено"
+    // НЕМЕДЛЕННО обновляем состояние на "выполнено"
     const newTaskStates = { ...taskStates, [task.id]: true };
     setTaskStates(newTaskStates);
 
@@ -175,7 +180,7 @@ function Tasks({ userData, updateUserData }) {
       window.open('https://t.me/ton_mania_channel', '_blank');
     }
 
-    // Отправляем запрос на сервер
+    // Отправляем запрос на сервер для получения награды
     try {
       const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
         method: 'POST',
@@ -206,6 +211,24 @@ function Tasks({ userData, updateUserData }) {
     }
   };
 
+  // Если задачи еще не загружены, показываем загрузку
+  if (tasks.length === 0) {
+    return (
+      <div className="tasks-container">
+        <BalanceSection userData={userData}/>
+        <Menu />
+        <div className="tasks-header">
+          <div className="header-icon">📋</div>
+          <div className="header-text">
+            <p className="header-line">get rewards for completing partners,</p>
+            <p className="header-line">daily and main tasks</p>
+          </div>
+        </div>
+        <div>Loading tasks...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="tasks-container">
       <BalanceSection userData={userData}/>
@@ -226,7 +249,7 @@ function Tasks({ userData, updateUserData }) {
           {tasks.map((task, index) => {
             const buttonState = getButtonState(task);
             const buttonContent = getButtonContent(task);
-            const isDisabled = buttonState === 'incomplete' || buttonState === 'claimed';
+            const isDisabled = isButtonDisabled(task);
             const taskIcon = task.type === 'ad' ? '📺' : task.type === 'subscribe' ? '📢' : '📝';
 
             return (
