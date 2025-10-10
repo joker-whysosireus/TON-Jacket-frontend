@@ -30,6 +30,8 @@ function Tasks({ userData, updateUserData }) {
         return defaultTasks;
     });
 
+    const [logs, setLogs] = useState([]);
+
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
 
@@ -37,41 +39,68 @@ function Tasks({ userData, updateUserData }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
+    const addLog = (message) => {
+        setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    };
+
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
+        addLog(`Начало выполнения задачи ${taskId}`);
+        
+        // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
         
+        addLog(`Состояние задачи ${taskId} обновлено на true`);
+
         if (channel) {
+            addLog(`Открытие канала: ${channel}`);
             window.open(channel, '_blank');
         }
         
         try {
+            addLog(`Отправка запроса на сервер...`);
+            
+            const requestBody = {
+                taskId: taskId,
+                rewardAmount: rewardAmount,
+                telegramUserId: userData.telegram_user_id
+            };
+
+            addLog(`Данные запроса: ${JSON.stringify(requestBody)}`);
+
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    taskId: taskId,
-                    rewardAmount: rewardAmount,
-                    telegramUserId: userData.telegram_user_id
-                }),
+                body: JSON.stringify(requestBody),
             });
 
+            addLog(`Статус ответа: ${response.status}`);
+            addLog(`OK: ${response.ok}`);
+
             const data = await response.json();
+            addLog(`Данные ответа: ${JSON.stringify(data)}`);
 
             if (response.ok) {
+                addLog(`УСПЕХ: Задача ${taskId} выполнена!`);
                 updateUserData(data.userData);
             } else {
+                addLog(`ОШИБКА: ${data.error}`);
+                // Откатываем состояние в случае ошибки
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
                 localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+                addLog(`Состояние задачи ${taskId} откачено`);
             }
         } catch (error) {
+            addLog(`ОШИБКА СЕТИ: ${error.message}`);
+            // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
             setTasks(revertedTasks);
             localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+            addLog(`Состояние задачи ${taskId} откачено`);
         }
     };
 
@@ -202,7 +231,7 @@ function Tasks({ userData, updateUserData }) {
     return (
         <div className="tasks-container">
             <BalanceSection userData={userData}/>
-            <Menu />
+            
             
             {/* Заголовок */}
             <div className="tasks-header">
@@ -251,6 +280,21 @@ function Tasks({ userData, updateUserData }) {
                 </div>
                 <div className="scroll-glow"></div>
             </div>
+
+            {/* Логи для отладки */}
+            <div className="debug-logs">
+                <h3>Логи отладки:</h3>
+                <div className="logs-container">
+                    {logs.map((log, index) => (
+                        <div key={index} className="log-entry">{log}</div>
+                    ))}
+                </div>
+                <button onClick={() => setLogs([])} className="clear-logs-btn">
+                    Очистить логи
+                </button>
+            </div>
+
+            <Menu />
         </div>
     );
 }
