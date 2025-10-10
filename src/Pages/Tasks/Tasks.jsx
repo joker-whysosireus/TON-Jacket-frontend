@@ -1,22 +1,25 @@
 import { useState, useEffect } from 'react';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
-import TaskHeader from './Components/TaskHeader/TaskHeader';
-import TaskList from './Components/TaskList/TaskList';
 import './Tasks.css';
 
 function Tasks({ userData, updateUserData }) {
   const [tasks, setTasks] = useState([]);
-  const [taskStates, setTaskStates] = useState(() => {
-    const storedTasks = localStorage.getItem('taskStates');
-    return storedTasks ? JSON.parse(storedTasks) : {};
-  });
+
+  // Загружаем состояния задач из localStorage
+  const getInitialTaskStates = () => {
+    const stored = localStorage.getItem('taskStates');
+    return stored ? JSON.parse(stored) : {};
+  };
+
+  const [taskStates, setTaskStates] = useState(getInitialTaskStates);
 
   // Сохраняем состояния задач в localStorage при изменении
   useEffect(() => {
     localStorage.setItem('taskStates', JSON.stringify(taskStates));
   }, [taskStates]);
 
+  // Инициализация задач
   useEffect(() => {
     const taskList = [
       {
@@ -123,59 +126,9 @@ function Tasks({ userData, updateUserData }) {
     setTasks(taskList);
   }, [userData, taskStates]);
 
-  const handleTaskAction = async (task) => {
-    // Проверяем, можно ли выполнить задачу
-    if (task.type === 'friends' || task.type === 'bet') {
-      if (task.currentProgress < task.requiredAmount) {
-        return; // Условия не выполнены, ничего не делаем
-      }
-    }
-
-    // Сразу обновляем состояние - помечаем задачу как выполненную
-    const updatedTaskStates = { ...taskStates, [task.id]: true };
-    setTaskStates(updatedTaskStates);
-    localStorage.setItem('taskStates', JSON.stringify(updatedTaskStates));
-
-    // Для подписки на канал - открываем ссылку
-    if (task.type === 'subscribe') {
-      window.open('https://t.me/ton_mania_channel', '_blank');
-    }
-
-    // Отправляем запрос на сервер для получения награды
-    try {
-      const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          taskId: task.id,
-          rewardAmount: task.rewardAmount,
-          telegramUserId: userData.telegram_user_id
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        updateUserData(result.userData);
-      } else {
-        console.error('Failed to claim task reward');
-        // В случае ошибки откатываем состояние
-        const revertedTaskStates = { ...taskStates };
-        setTaskStates(revertedTaskStates);
-        localStorage.setItem('taskStates', JSON.stringify(revertedTaskStates));
-      }
-    } catch (error) {
-      console.error('Error claiming task reward:', error);
-      // В случае ошибки откатываем состояние
-      const revertedTaskStates = { ...taskStates };
-      setTaskStates(revertedTaskStates);
-      localStorage.setItem('taskStates', JSON.stringify(revertedTaskStates));
-    }
-  };
-
+  // Получение состояния кнопки
   const getButtonState = (task) => {
-    if (task.completed) {
+    if (taskStates[task.id]) {
       return 'claimed';
     } else if (task.type === 'ad' || task.type === 'subscribe') {
       return 'active';
@@ -186,6 +139,7 @@ function Tasks({ userData, updateUserData }) {
     }
   };
 
+  // Получение текста кнопки
   const getButtonContent = (task) => {
     const state = getButtonState(task);
     
@@ -203,17 +157,101 @@ function Tasks({ userData, updateUserData }) {
     }
   };
 
+  // Обработчик нажатия на кнопку
+  const handleButtonClick = async (task) => {
+    const state = getButtonState(task);
+    
+    // Если кнопка неактивна - ничего не делаем
+    if (state === 'incomplete') {
+      return;
+    }
+
+    // Сразу обновляем состояние на "выполнено"
+    const newTaskStates = { ...taskStates, [task.id]: true };
+    setTaskStates(newTaskStates);
+
+    // Для подписки открываем канал
+    if (task.type === 'subscribe') {
+      window.open('https://t.me/ton_mania_channel', '_blank');
+    }
+
+    // Отправляем запрос на сервер
+    try {
+      const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          taskId: task.id,
+          rewardAmount: task.rewardAmount,
+          telegramUserId: userData.telegram_user_id
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        updateUserData(result.userData);
+      } else {
+        // Если ошибка - откатываем состояние
+        console.error('Failed to claim task reward');
+        const revertedTaskStates = { ...taskStates };
+        setTaskStates(revertedTaskStates);
+      }
+    } catch (error) {
+      // Если ошибка - откатываем состояние
+      console.error('Error claiming task reward:', error);
+      const revertedTaskStates = { ...taskStates };
+      setTaskStates(revertedTaskStates);
+    }
+  };
+
   return (
     <div className="tasks-container">
       <BalanceSection userData={userData}/>
       <Menu />
-      <TaskHeader />
-      <TaskList 
-        tasks={tasks}
-        onTaskAction={handleTaskAction}
-        getButtonState={getButtonState}
-        getButtonContent={getButtonContent}
-      />
+      
+      {/* Заголовок */}
+      <div className="tasks-header">
+        <div className="header-icon">📋</div>
+        <div className="header-text">
+          <p className="header-line">get rewards for completing partners,</p>
+          <p className="header-line">daily and main tasks</p>
+        </div>
+      </div>
+
+      {/* Список задач */}
+      <div className="tasks-list-wrapper">
+        <div className="tasks-list">
+          {tasks.map((task, index) => {
+            const buttonState = getButtonState(task);
+            const buttonContent = getButtonContent(task);
+            const isDisabled = buttonState === 'incomplete' || buttonState === 'claimed';
+            const taskIcon = task.type === 'ad' ? '📺' : task.type === 'subscribe' ? '📢' : '📝';
+
+            return (
+              <div 
+                key={task.id} 
+                className={`task-item ${index > 0 ? 'task-with-top-line' : ''}`}
+              >
+                <div className="task-icon">{taskIcon}</div>
+                <div className="task-content">
+                  <span className="task-title">{task.title}</span>
+                  <span className="task-reward">{task.reward}</span>
+                </div>
+                <button 
+                  className={`task-action-btn ${buttonState}`}
+                  onClick={() => handleButtonClick(task)}
+                  disabled={isDisabled}
+                >
+                  {buttonContent}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="scroll-glow"></div>
+      </div>
     </div>
   );
 }
