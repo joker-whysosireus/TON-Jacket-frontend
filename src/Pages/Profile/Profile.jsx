@@ -3,9 +3,6 @@ import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import Confetti from 'react-confetti';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
-import UserSection from './Components/User/UserSection';
-import WalletStats from './Components/Wallet/WalletStats';
-import ActionCards from './Components/Cards/ActionCards';
 import ConvertModal from './Components/Modals/ConvertModal';
 import WithdrawModal from './Components/Modals/WithdrawModal';
 import DepositModal from './Components/Modals/DepositModal';
@@ -85,23 +82,20 @@ function Profile({ userData, updateUserData }) {
         return () => unsubscribe();
     }, [tonConnectUI, rawAddress]);
 
-    // Listen for wallet connection to update userData - ИСПРАВЛЕННЫЙ useEffect
+    // Listen for wallet connection to update userData
     useEffect(() => {
         let unsubscribe;
         
         const handleStatusChange = async (walletInfo) => {
             if (walletInfo && userData) {
                 try {
-                    // Используем user-friendly адрес для сохранения в базу данных
                     const addressToSave = userFriendlyAddress;
                     
-                    // Проверяем, что адрес валидный и не пустой
                     if (!addressToSave || addressToSave === '' || addressToSave === 'undefined') {
                         console.log("Invalid wallet address, skipping save");
                         return;
                     }
 
-                    // Проверяем, не совпадает ли текущий адрес с уже сохраненным
                     if (userData.wallet === addressToSave) {
                         console.log("Wallet address already up to date");
                         return;
@@ -135,13 +129,11 @@ function Profile({ userData, updateUserData }) {
                     console.error('Error updating wallet:', error);
                 }
             } else if (!walletInfo && userData) {
-                // Если кошелек отключен, обновляем состояние
                 console.log("Wallet disconnected");
                 setWalletConnected(false);
             }
         };
 
-        // Подписываемся на изменения статуса кошелька
         if (tonConnectUI && typeof tonConnectUI.onStatusChange === 'function') {
             unsubscribe = tonConnectUI.onStatusChange(handleStatusChange);
         }
@@ -212,7 +204,7 @@ function Profile({ userData, updateUserData }) {
                 if (response.ok) {
                     updateUserData(result.data);
                     setConvertSuccess(true);
-                    startConfetti(); // Добавляем конфетти для конвертации
+                    startConfetti();
                     
                     setTimeout(() => {
                         setShowConvertModal(false);
@@ -234,7 +226,6 @@ function Profile({ userData, updateUserData }) {
             setWithdrawSuccess(false);
             
             try {
-                // Отправляем запрос только на уведомление (без изменения баланса)
                 const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/process-withdraw', {
                     method: 'POST',
                     headers: {
@@ -253,7 +244,6 @@ function Profile({ userData, updateUserData }) {
                     setWithdrawSuccess(true);
                     startConfetti();
                     
-                    // Ждем 1.5 секунды перед закрытием
                     setTimeout(() => {
                         setIsWithdrawing(false);
                         setWithdrawSuccess(false);
@@ -322,11 +312,61 @@ function Profile({ userData, updateUserData }) {
                 }, 2000);
             }
         } catch (error) {
-            // Игнорируем ошибки отмены пользователем, остальные ошибки просто не показываем
+            // Игнорируем ошибки отмены пользователем
         } finally {
             setIsDepositing(false);
         }
     };
+
+    // Wallet connection handler
+    const handleWalletAction = async () => {
+        if (walletConnected) {
+            if (window.confirm('Are you sure you want to disconnect your wallet?')) {
+                try {
+                    await tonConnectUI.disconnect();
+                    localStorage.removeItem('ton-connect');
+                    localStorage.removeItem('wallet-connected');
+                    setWalletConnected(false);
+                    await tonConnectUI.connectionRestore.disconnect();
+                } catch (error) {
+                    console.error('Disconnection failed:', error);
+                }
+            }
+        } else {
+            tonConnectUI.openModal();
+        }
+    };
+
+    const formatAddress = (addr) => {
+        if (!addr) return 'Not connected';
+        return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+    };
+
+    // Иконки как в Figma
+    const ArrowUpFromLineIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m18 9-6-6-6 6"/>
+            <path d="M12 3v14"/>
+            <path d="M5 21h14"/>
+        </svg>
+    );
+
+    const ArrowDownToLineIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 17V3"/>
+            <path d="m6 11 6 6 6-6"/>
+            <path d="M19 21H5"/>
+        </svg>
+    );
+
+    const RefreshCwIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+        </svg>
+    );
 
     return (
         <div className="profile-container">
@@ -356,26 +396,77 @@ function Profile({ userData, updateUserData }) {
             )}
 
             <BalanceSection userData={userData} />
-            
-            <UserSection 
-                userData={userData}
-                walletConnected={walletConnected}
-                setWalletConnected={setWalletConnected}
-                userFriendlyAddress={userFriendlyAddress}
-            />
 
-            <div className="wallet-interface">
-                <div className="wallet-content">
-                    <WalletStats userData={userData} />
-                    
-                    <ActionCards 
-                        setShowConvertModal={setShowConvertModal}
-                        setShowWithdrawModal={setShowWithdrawModal}
-                        setShowDepositModal={setShowDepositModal}
-                    />
+            {/* Header Section как в Figma */}
+            <div className="profile-header-section">
+                <div className="header-icon">👤</div>
+                <p className="header-description">
+                    Withdraw TON to your wallet, convert coins to TON, or top up your balance in TON
+                </p>
+            </div>
+
+            {/* Wallet Connect Button */}
+            <div className="wallet-connect-section">
+                <button
+                    className={`wallet-connect-button ${walletConnected ? 'connected' : 'disconnected'}`}
+                    onClick={handleWalletAction}
+                >
+                    {walletConnected ? formatAddress(userFriendlyAddress) : 'Connect Wallet'}
+                </button>
+            </div>
+
+            {/* Cards Section как в Figma */}
+            <div className="profile-cards-section">
+                {/* Withdrawal Card */}
+                <div 
+                    className="profile-card" 
+                    onClick={() => setShowWithdrawModal(true)}
+                >
+                    <div className="card-content">
+                        <div className="card-icon">
+                            <ArrowUpFromLineIcon />
+                        </div>
+                        <div className="card-text">
+                            <h3 className="card-title">Withdrawal</h3>
+                            <p className="card-description">Withdraw TON to your wallet</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Conversion Card */}
+                <div 
+                    className="profile-card" 
+                    onClick={() => setShowConvertModal(true)}
+                >
+                    <div className="card-content">
+                        <div className="card-icon">
+                            <RefreshCwIcon />
+                        </div>
+                        <div className="card-text">
+                            <h3 className="card-title">Conversion</h3>
+                            <p className="card-description">Convert coins to TON</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Top-up Card */}
+                <div 
+                    className="profile-card" 
+                    onClick={() => setShowDepositModal(true)}
+                >
+                    <div className="card-content">
+                        <div className="card-icon">
+                            <ArrowDownToLineIcon />
+                        </div>
+                        <div className="card-text">
+                            <h3 className="card-title">Top-up</h3>
+                            <p className="card-description">Add TON to your balance</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            {/* Модальные окна */}
             <ConvertModal 
                 show={showConvertModal}
                 onClose={() => setShowConvertModal(false)}

@@ -21,15 +21,15 @@
   text-align: center;
   margin-bottom: 15px;
   padding: 10px 0;
-  margin-top: 10px;
+  ;
 }
 
 .header-icon {
-  font-size: 5rem;
+  font-size: 7rem;
 }
 
 .header-text {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: #ccc;
   max-width: 400px;
   line-height: 1.4;
@@ -49,7 +49,7 @@
   max-width: 600px;
   margin: 0 auto;
   position: relative;
-  max-height: 380px;
+  max-height: 415px;
   overflow-y: auto;
 }
 
@@ -156,19 +156,23 @@
 
 @media (max-height: 670px) {
   .tasks-list-wrapper {
-    max-height: 258px;
+    max-height: 295px;
+  }
+
+  .header-text {
+    font-size: 0.7rem;
   }
 }
 
 @media (min-height: 790px) and (max-height: 800px) {
   .tasks-list-wrapper {
-    max-height: 300px;
+    max-height: 333px;
   }
 }
 
 @media (min-height: 890px) and (max-height: 940px) {
   .tasks-list-wrapper {
-    max-height: 435px;
+    max-height: 465px;
   }
 
   .header-text {
