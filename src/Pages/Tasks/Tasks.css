@@ -119,40 +119,39 @@
   cursor: pointer;
   flex-shrink: 0;
   font-weight: bold;
-  transition: all 0.2s;
   font-size: 0.8rem;
+  transition: all 0.2s ease;
 }
 
+/* НЕАКТИВНАЯ кнопка - условия не выполнены */
 .task-action-btn.incomplete {
   background: #666;
   color: #ccc;
   cursor: not-allowed;
 }
 
-.task-action-btn.completed {
-  background: #fff;
-  color: #000;
-}
-
+/* АКТИВНАЯ кнопка */
 .task-action-btn.active {
   background: #fff;
   color: #000;
 }
 
+.task-action-btn.active:hover {
+  background: #e0e0e0;
+  transform: scale(1.05);
+}
+
+/* ВЫПОЛНЕННАЯ кнопка - задача завершена */
 .task-action-btn.claimed {
   background: #333;
   color: #fff;
   cursor: default;
 }
 
-.task-action-btn:not(.incomplete):not(.claimed):hover {
-  opacity: 0.8;
-  transform: scale(1.05);
-}
-
+/* Заблокированные кнопки */
 .task-action-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 @media (max-height: 670px) {
