@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Loader.css';
 
-const Loader = ({ userData, onComplete }) => {
+const Loader = ({ userData, onComplete, currentLanguage, onLanguageChange }) => {
     const [progress, setProgress] = useState(0);
-    const [language, setLanguage] = useState('english');
     const [isLoading, setIsLoading] = useState(true);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const navigate = useNavigate();
@@ -51,7 +50,7 @@ const Loader = ({ userData, onComplete }) => {
     };
 
     const handleLanguageChange = (lang) => {
-        setLanguage(lang);
+        onLanguageChange(lang);
     };
 
     const handleGoToSlots = () => {
@@ -74,7 +73,7 @@ const Loader = ({ userData, onComplete }) => {
         english: [
             { 
                 title: "1. General Provisions", 
-                content: "This Privacy Policy governs the processing of personal data of users of the TON Jacket application, where users can play slot machines using TON (The Open Network) cryptocurrency to increase their TON balance or purchase Telegram gifts." 
+                content: "This Privacy Policy governs the processing of personal data of users of the TON Mania application, where users can play slot machines using TON (The Open Network) cryptocurrency to increase their TON balance or purchase Telegram gifts." 
             },
             { 
                 title: "2. Information We Collect", 
@@ -102,21 +101,21 @@ const Loader = ({ userData, onComplete }) => {
             },
             { 
                 title: "8. Risk Disclaimer", 
-                content: "The TON Jacket team does not promise or guarantee big winnings. The application is entertainment, and losing is always possible. By using TON Jacket, you acknowledge that cryptocurrency transactions and gaming involve high risks, and you accept full responsibility for any possible financial losses." 
+                content: "The TON Mania team does not promise or guarantee big winnings. The application is entertainment, and losing is always possible. By using TON Mania, you acknowledge that cryptocurrency transactions and gaming involve high risks, and you accept full responsibility for any possible financial losses." 
             },
             { 
                 title: "9. Policy Changes", 
-                content: "We may update this policy. Continued use of TON Jacket after changes constitutes acceptance of the revised policy." 
+                content: "We may update this policy. Continued use of TON Mania after changes constitutes acceptance of the revised policy." 
             },
             { 
                 title: "10. Contact Information", 
-                content: "For privacy-related questions, contact us via Telegram: @tonjacket_support" 
+                content: "For privacy-related questions, contact us via Telegram: @tonmania_support" 
             }
         ],
         russian: [
             { 
                 title: "1. Общие положения", 
-                content: "Настоящая Политика конфиденциальности регулирует обработку персональных данных пользователей приложения TON Jacket, где пользователи могут играть в игровые автоматы с использованием криптовалюты TON (The Open Network) для увеличения баланса TON или покупки подарков Telegram." 
+                content: "Настоящая Политика конфиденциальности регулирует обработку персональных данных пользователей приложения TON Mania, где пользователи могут играть в игровые автоматы с использованием криптовалюты TON (The Open Network) для увеличения баланса TON или покупки подарков Telegram." 
             },
             { 
                 title: "2. Собираемая информация", 
@@ -144,24 +143,24 @@ const Loader = ({ userData, onComplete }) => {
             },
             { 
                 title: "8. Отказ от ответственности", 
-                content: "Команда TON Jacket не обещает и не гарантирует больших выигрышей. Приложение является игровым развлечением, и проигрыш всегда возможен. Используя TON Jacket, вы осознаёте, что криптовалютные операции и азартные игры связаны с высокими рисками, и вы принимаете на себя полную ответственность за все возможные финансовые потери." 
+                content: "Команда TON Mania не обещает и не гарантирует больших выигрышей. Приложение является игровым развлечением, и проигрыш всегда возможен. Используя TON Mania, вы осознаёте, что криптовалютные операции и азартные игры связаны с высокими рисками, и вы принимаете на себя полную ответственность за все возможные финансовые потери." 
             },
             { 
                 title: "9. Изменения политики", 
-                content: "Мы можем обновлять данную политику. Продолжение использования TON Jacket после изменений означает принятие обновленной политики." 
+                content: "Мы можем обновлять данную политику. Продолжение использования TON Mania после изменений означает принятие обновленной политики." 
             },
             { 
                 title: "10. Контактная информация", 
-                content: "По вопросам, связанным с конфиденциальностью, свяжитесь с нами через Telegram: @tonjacket_support" 
+                content: "По вопросам, связанным с конфиденциальностью, свяжитесь с нами через Telegram: @tonmania_support" 
             }
         ]
     };
 
     return (
-        <div className={`loader-container ${language === 'russian' ? 'russian' : 'english'}`}>
+        <div className={`loader-container ${currentLanguage === 'russian' ? 'russian' : 'english'}`}>
             <div className="loader-content">
-                <h1 className="welcome-text">{texts[language].welcome}</h1>
-                <p className="instruction-text">{texts[language].instruction}</p>
+                <h1 className="welcome-text">{texts[currentLanguage].welcome}</h1>
+                <p className="instruction-text">{texts[currentLanguage].instruction}</p>
                 
                 <div className="progress-container">
                     <div 
@@ -171,25 +170,25 @@ const Loader = ({ userData, onComplete }) => {
                     <div className="progress-text">{progress}%</div>
                 </div>
                 
-                <p className="privacy-note">{texts[language].privacyNote}</p>
+                <p className="privacy-note">{texts[currentLanguage].privacyNote}</p>
                 
                 <div className="language-section">
                     <button 
                         className="privacy-policy-btn"
                         onClick={handlePrivacyPolicy}
                     >
-                        {texts[language].privacyPolicy}
+                        {texts[currentLanguage].privacyPolicy}
                     </button>
                     
                     <div className="language-buttons">
                         <button 
-                            className={`language-btn ${language === 'english' ? 'active' : ''}`}
+                            className={`language-btn ${currentLanguage === 'english' ? 'active' : ''}`}
                             onClick={() => handleLanguageChange('english')}
                         >
                             English
                         </button>
                         <button 
-                            className={`language-btn ${language === 'russian' ? 'active' : ''}`}
+                            className={`language-btn ${currentLanguage === 'russian' ? 'active' : ''}`}
                             onClick={() => handleLanguageChange('russian')}
                         >
                             Русский
@@ -201,7 +200,7 @@ const Loader = ({ userData, onComplete }) => {
                         onClick={handleGoToSlots}
                         disabled={isLoading}
                     >
-                        {texts[language].goButton}
+                        {texts[currentLanguage].goButton}
                     </button>
                 </div>
             </div>
@@ -211,13 +210,13 @@ const Loader = ({ userData, onComplete }) => {
                 <div className="modal-overlay" onClick={closePrivacyModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{texts[language].privacyTitle}</h2>
+                            <h2>{texts[currentLanguage].privacyTitle}</h2>
                             <span className="modal-close" onClick={closePrivacyModal}>×</span>
                         </div>
                         <div className="modal-body">
-                            <p className="modal-update-date">{texts[language].lastUpdated}</p>
+                            <p className="modal-update-date">{texts[currentLanguage].lastUpdated}</p>
                             <div className="privacy-content">
-                                {privacyPolicyContent[language].map((section, index) => (
+                                {privacyPolicyContent[currentLanguage].map((section, index) => (
                                     <div key={index} className="privacy-section">
                                         <h3>{section.title}</h3>
                                         <p>{section.content}</p>

@@ -5,7 +5,7 @@ import Home from './Pages/Home/Home.jsx';
 import Friends from './Pages/Friends/Friends.jsx';
 import Tasks from './Pages/Tasks/Tasks.jsx';
 import Loader from './Assets/Loader/Loader.jsx';
-import Profile from './Pages/Profile/Profile.jsx'
+import Profile from './Pages/Profile/Profile.jsx';
 import Gifts from './Pages/Gifts/Gifts.jsx';
 
 const AUTH_FUNCTION_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/auth';
@@ -17,7 +17,16 @@ const App = () => {
     const [authCheckLoading, setAuthCheckLoading] = useState(true);
     const [telegramReady, setTelegramReady] = useState(false);
     const [loaderCompleted, setLoaderCompleted] = useState(false);
+    const [language, setLanguage] = useState(() => {
+        // Получаем язык из localStorage или используем английский по умолчанию
+        return localStorage.getItem('ton-mania-language') || 'english';
+    });
     const adIntervalRef = useRef(null);
+
+    // Сохраняем язык в localStorage при изменении
+    useEffect(() => {
+        localStorage.setItem('ton-mania-language', language);
+    }, [language]);
 
     // Инициализация Telegram WebApp
     useEffect(() => {
@@ -160,16 +169,31 @@ const App = () => {
 
     // Показываем Loader до тех пор, пока не завершится загрузка и пользователь не нажмет кнопку
     if (!loaderCompleted || authCheckLoading) {
-        return <Loader userData={userData} onComplete={handleLoaderComplete} />;
+        return <Loader 
+            userData={userData} 
+            onComplete={handleLoaderComplete}
+            currentLanguage={language}
+            onLanguageChange={setLanguage}
+        />;
     }
 
     return (
         <Routes location={location}>
-            <Route path="/" element={<Home isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
-            <Route path="/friends" element={<Friends isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
-            <Route path="/tasks" element={<Tasks isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
-            <Route path="/profile" element={<Profile isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
-            <Route path="/gifts" element={<Gifts isActive={isActive} userData={userData} updateUserData={updateUserData} />} />
+            <Route path="/" element={
+                <Home isActive={isActive} userData={userData} updateUserData={updateUserData} language={language} />
+            } />
+            <Route path="/friends" element={
+                <Friends isActive={isActive} userData={userData} updateUserData={updateUserData} language={language} />
+            } />
+            <Route path="/tasks" element={
+                <Tasks isActive={isActive} userData={userData} updateUserData={updateUserData} language={language} />
+            } />
+            <Route path="/profile" element={
+                <Profile isActive={isActive} userData={userData} updateUserData={updateUserData} language={language} />
+            } />
+            <Route path="/gifts" element={
+                <Gifts isActive={isActive} userData={userData} updateUserData={updateUserData} language={language} />
+            } />
         </Routes>
     );
 };

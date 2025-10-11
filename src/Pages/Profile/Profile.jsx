@@ -6,9 +6,10 @@ import BalanceSection from '../Home/Components/Balance/BalanceSection';
 import ConvertModal from './Components/Modals/ConvertModal';
 import WithdrawModal from './Components/Modals/WithdrawModal';
 import DepositModal from './Components/Modals/DepositModal';
+import { translations } from '../../Assets/Lang/translation';
 import './Profile.css';
 
-function Profile({ userData, updateUserData }) {
+function Profile({ userData, updateUserData, language = 'english' }) {
     const [tonConnectUI] = useTonConnectUI();
     const userFriendlyAddress = useTonAddress(true);
     const rawAddress = useTonAddress(false);
@@ -39,6 +40,9 @@ function Profile({ userData, updateUserData }) {
     
     // Правильный адрес для депозита
     const depositWalletAddress = "UQB_2coQNHxdWZN0b7y9QUy13jLl2XNaN2yPcicFJbCbhSEK";
+
+    // Получаем переводы для текущего языка
+    const t = translations[language]?.profile || translations.english.profile;
 
     // Confetti animation
     const startConfetti = useCallback(() => {
@@ -321,7 +325,7 @@ function Profile({ userData, updateUserData }) {
     // Wallet connection handler
     const handleWalletAction = async () => {
         if (walletConnected) {
-            if (window.confirm('Are you sure you want to disconnect your wallet?')) {
+            if (window.confirm(t.disconnectConfirm)) {
                 try {
                     await tonConnectUI.disconnect();
                     localStorage.removeItem('ton-connect');
@@ -338,11 +342,11 @@ function Profile({ userData, updateUserData }) {
     };
 
     const formatAddress = (addr) => {
-        if (!addr) return 'Not connected';
+        if (!addr) return t.notConnected;
         return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
     };
 
-    // Иконки как в Figma
+    // Иконки
     const ArrowUpFromLineIcon = () => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m18 9-6-6-6 6"/>
@@ -395,13 +399,13 @@ function Profile({ userData, updateUserData }) {
                 </div>
             )}
 
-            <BalanceSection userData={userData} />
+            <BalanceSection userData={userData} language={language} />
 
-            {/* Header Section как в Figma */}
+            {/* Header Section */}
             <div className="profile-header-section">
                 <div className="header-icon">👤</div>
                 <p className="header-description">
-                    Withdraw TON to your wallet, convert coins to TON, or top up your balance in TON
+                    {t.headerDescription}
                 </p>
             </div>
 
@@ -411,11 +415,11 @@ function Profile({ userData, updateUserData }) {
                     className={`wallet-connect-button ${walletConnected ? 'connected' : 'disconnected'}`}
                     onClick={handleWalletAction}
                 >
-                    {walletConnected ? formatAddress(userFriendlyAddress) : 'Connect Wallet'}
+                    {walletConnected ? formatAddress(userFriendlyAddress) : t.connectWallet}
                 </button>
             </div>
 
-            {/* Cards Section как в Figma */}
+            {/* Cards Section */}
             <div className="profile-cards-section">
                 {/* Withdrawal Card */}
                 <div 
@@ -427,8 +431,8 @@ function Profile({ userData, updateUserData }) {
                             <ArrowUpFromLineIcon />
                         </div>
                         <div className="card-text">
-                            <h3 className="card-title">Withdrawal</h3>
-                            <p className="card-description">Withdraw TON to your wallet</p>
+                            <h3 className="card-title">{t.withdrawal}</h3>
+                            <p className="card-description">{t.withdrawalDescription}</p>
                         </div>
                     </div>
                 </div>
@@ -443,8 +447,8 @@ function Profile({ userData, updateUserData }) {
                             <RefreshCwIcon />
                         </div>
                         <div className="card-text">
-                            <h3 className="card-title">Conversion</h3>
-                            <p className="card-description">Convert coins to TON</p>
+                            <h3 className="card-title">{t.conversion}</h3>
+                            <p className="card-description">{t.conversionDescription}</p>
                         </div>
                     </div>
                 </div>
@@ -459,8 +463,8 @@ function Profile({ userData, updateUserData }) {
                             <ArrowDownToLineIcon />
                         </div>
                         <div className="card-text">
-                            <h3 className="card-title">Top-up</h3>
-                            <p className="card-description">Add TON to your balance</p>
+                            <h3 className="card-title">{t.topup}</h3>
+                            <p className="card-description">{t.topupDescription}</p>
                         </div>
                     </div>
                 </div>
@@ -474,6 +478,7 @@ function Profile({ userData, updateUserData }) {
                 onConvert={handleConvert}
                 isConverting={isConverting}
                 convertSuccess={convertSuccess}
+                language={language}
             />
 
             <WithdrawModal 
@@ -483,6 +488,7 @@ function Profile({ userData, updateUserData }) {
                 onWithdraw={handleWithdraw}
                 isWithdrawing={isWithdrawing}
                 withdrawSuccess={withdrawSuccess}
+                language={language}
             />
 
             <DepositModal 
@@ -492,9 +498,10 @@ function Profile({ userData, updateUserData }) {
                 onDeposit={handleDepositWithTon}
                 isDepositing={isDepositing}
                 depositSuccess={depositSuccess}
+                language={language}
             />
 
-            <Menu />
+            <Menu language={language} />
         </div>
     );
 }

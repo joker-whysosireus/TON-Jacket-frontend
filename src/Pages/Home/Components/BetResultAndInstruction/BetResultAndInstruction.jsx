@@ -1,7 +1,11 @@
 import React from 'react';
 import './BetResultAndInstruction.css';
+import { translations } from '../../../../Assets/Lang/translation';
 
-const BetResultAndInstruction = ({ betResult }) => {
+const BetResultAndInstruction = ({ betResult, language = 'english' }) => {
+  // Получаем переводы для текущего языка
+  const t = translations[language]?.betResult || translations.english.betResult;
+
   return (
     <>
       <div className="bet-result-section">
@@ -10,7 +14,7 @@ const BetResultAndInstruction = ({ betResult }) => {
         </div>
       </div>
       <div className="instruction-text">
-        Choose what you will play for. Click "Instructions" to learn how to play and see winning combinations!
+        {t.instruction}
       </div>
     </>
   );

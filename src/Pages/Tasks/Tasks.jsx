@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
+import { translations, formatString } from '../../Assets/Lang/translation';
 import './Tasks.css';
 
-function Tasks({ userData, updateUserData }) {
+function Tasks({ userData, updateUserData, language = 'english' }) {
+    // Получаем переводы для текущего языка
+    const t = translations[language]?.tasks || translations.english.tasks;
+    const balanceT = translations[language]?.balance || translations.english.balance;
+    const commonT = translations[language]?.common || translations.english.common;
+
     const [tasks, setTasks] = useState(() => {
         const storedTasksString = localStorage.getItem('tasks');
         const defaultTasks = {
@@ -88,7 +94,7 @@ function Tasks({ userData, updateUserData }) {
 
     const getButtonText = (task, taskKey) => {
         if (tasks[taskKey]) {
-            return 'Done!';
+            return t.done || 'Done!';
         } else if (task.type === 'friends' || task.type === 'bet') {
             if (task.currentProgress >= task.requiredAmount) {
                 return task.buttonText;
@@ -116,118 +122,119 @@ function Tasks({ userData, updateUserData }) {
         }
     };
 
+    // Обновленный taskList с использованием переводов
     const taskList = [
         {
             id: 0,
             type: 'ad',
-            title: 'Watch a short video',
-            reward: '+500 coins',
+            title: t.tasks && t.tasks[0] ? t.tasks[0].title : 'Watch a short video',
+            reward: '+500 ' + (balanceT.coins || 'coins'),
             rewardAmount: 500,
             requiredAmount: 1,
             currentProgress: 0,
-            buttonText: 'Watch',
+            buttonText: t.watch || 'Watch',
             taskKey: 'task0'
         },
         {
             id: 1,
             type: 'subscribe',
-            title: 'Subscribe to our channel',
-            reward: '+1000 coins',
+            title: t.tasks && t.tasks[1] ? t.tasks[1].title : 'Subscribe to our channel',
+            reward: '+1000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 1000,
             requiredAmount: 1,
             currentProgress: 0,
-            buttonText: 'Subscribe',
+            buttonText: t.subscribe || 'Subscribe',
             taskKey: 'task1'
         },
         {
             id: 2,
             type: 'friends',
-            title: 'Invite 5 friends',
-            reward: '+2500 coins',
+            title: t.tasks && t.tasks[2] ? t.tasks[2].title : 'Invite 5 friends',
+            reward: '+2500 ' + (balanceT.coins || 'coins'),
             rewardAmount: 2500,
             requiredAmount: 5,
             currentProgress: userData?.invited_friends || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task2'
         },
         {
             id: 3,
             type: 'friends',
-            title: 'Invite 10 friends',
-            reward: '+5000 coins',
+            title: t.tasks && t.tasks[3] ? t.tasks[3].title : 'Invite 10 friends',
+            reward: '+5000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 5000,
             requiredAmount: 10,
             currentProgress: userData?.invited_friends || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task3'
         },
         {
             id: 4,
             type: 'friends',
-            title: 'Invite 25 friends',
-            reward: '+1500 coins',
+            title: t.tasks && t.tasks[4] ? t.tasks[4].title : 'Invite 25 friends',
+            reward: '+1500 ' + (balanceT.coins || 'coins'),
             rewardAmount: 1500,
             requiredAmount: 25,
             currentProgress: userData?.invited_friends || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task4'
         },
         {
             id: 5,
             type: 'friends',
-            title: 'Invite 50 friends',
-            reward: '+3000 coins',
+            title: t.tasks && t.tasks[5] ? t.tasks[5].title : 'Invite 50 friends',
+            reward: '+3000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 3000,
             requiredAmount: 50,
             currentProgress: userData?.invited_friends || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task5'
         },
         {
             id: 6,
             type: 'bet',
-            title: 'Make a bet of 5 TON',
-            reward: '+1000 coins',
+            title: t.tasks && t.tasks[6] ? t.tasks[6].title : 'Make a bet of 5 TON',
+            reward: '+1000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 1000,
             requiredAmount: 5,
             currentProgress: userData?.bet_amount || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task6'
         },
         {
             id: 7,
             type: 'bet',
-            title: 'Make a bet of 25 TON',
-            reward: '+5000 coins',
+            title: t.tasks && t.tasks[7] ? t.tasks[7].title : 'Make a bet of 25 TON',
+            reward: '+5000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 5000,
             requiredAmount: 25,
             currentProgress: userData?.bet_amount || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task7'
         },
         {
             id: 8,
             type: 'bet',
-            title: 'Make a bet of 50 TON',
-            reward: '+10000 coins',
+            title: t.tasks && t.tasks[8] ? t.tasks[8].title : 'Make a bet of 50 TON',
+            reward: '+10000 ' + (balanceT.coins || 'coins'),
             rewardAmount: 10000,
             requiredAmount: 50,
             currentProgress: userData?.bet_amount || 0,
-            buttonText: 'Get',
+            buttonText: t.get || 'Get',
             taskKey: 'task8'
         }
     ];
 
     return (
         <div className="tasks-container">
-            <BalanceSection userData={userData}/>
+            <BalanceSection userData={userData} language={language}/>
             
             {/* Заголовок */}
             <div className="tasks-header">
                 <div className="header-icon">📋</div>
                 <div className="header-text">
-                    <p className="header-line">Get rewards for completing partners,</p>
-                    <p className="header-line">daily and main tasks</p>
+                    <p className="header-line">{t.titleLine1 || 'Get rewards for completing partners,'}</p>
+                    <p className="header-line">{t.titleLine2 || 'daily and main tasks'}</p>
                 </div>
             </div>
 
@@ -268,7 +275,7 @@ function Tasks({ userData, updateUserData }) {
                     })}
                 </div>
                 <div className="scroll-glow"></div>
-                <Menu />
+                <Menu language={language} />
             </div>
         </div>
     );

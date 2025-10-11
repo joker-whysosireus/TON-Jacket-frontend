@@ -5,6 +5,7 @@ import BalanceSection from './Components/Balance/BalanceSection';
 import BetResultAndInstruction from './Components/BetResultAndInstruction/BetResultAndInstruction';
 import BetModal from './Components/Modals/BetModal';
 import InstructionsModal from './Components/Modals/InstructionsModal';
+import { translations, formatString } from '../../Assets/Lang/translation';
 import './Home.css';
 
 // ОБНОВЛЕННЫЕ КОНСТАНТЫ С УМЕНЬШЕННЫМИ ШАНСАМИ ВЫИГРЫША
@@ -20,7 +21,7 @@ const SYMBOLS_CONFIG = [
   { id: 9, symbol: '⑦', name: 'Seven', weight: 6, type: 'seven' },
   { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 3, type: 'premium' },
   { id: 11, symbol: '👑', name: 'Crown', weight: 2, type: 'premium' },
-  { id: 12, symbol: '💀', name: 'Skull', weight: 20, type: 'skull' }, // Увеличен вес проигрышного символа
+  { id: 12, symbol: '💀', name: 'Skull', weight: 20, type: 'skull' },
   { id: 13, symbol: '🔥', name: 'Fire', weight: 2, type: 'special' }
 ];
 
@@ -32,30 +33,30 @@ const getWinForCombination = (symbols) => {
   // 1. ТРОЙНЫЕ КОМБИНАЦИИ (уменьшены шансы)
   if (a === b && b === c) {
     const tripleWins = {
-      '🍒': { multiplier: 2, name: 'TRIPLE CHERRY' }, // уменьшено с 3
-      '🍋': { multiplier: 3, name: 'TRIPLE LEMON' }, // уменьшено с 4
-      '🍊': { multiplier: 3, name: 'TRIPLE ORANGE' }, // уменьшено с 5
-      '🍉': { multiplier: 4, name: 'TRIPLE WATERMELON' }, // уменьшено с 6
-      '🔔': { multiplier: 5, name: 'TRIPLE BELL' }, // уменьшено с 8
-      '⭐': { multiplier: 4, name: 'TRIPLE STAR' }, // уменьшено с 7
-      '🍇': { multiplier: 3, name: 'TRIPLE GRAPES' }, // уменьшено с 5
-      '🔶': { multiplier: 6, name: 'TRIPLE DIAMOND' }, // уменьшено с 10
-      '⑦': { multiplier: 8, name: 'TRIPLE SEVEN' }, // уменьшено с 12
-      '💎': { multiplier: 25, name: 'DIAMOND JACKPOT' }, // уменьшено с 50
-      '👑': { multiplier: 15, name: 'CROWN JACKPOT' }, // уменьшено с 25
+      '🍒': { multiplier: 2, name: 'TRIPLE CHERRY' },
+      '🍋': { multiplier: 3, name: 'TRIPLE LEMON' },
+      '🍊': { multiplier: 3, name: 'TRIPLE ORANGE' },
+      '🍉': { multiplier: 4, name: 'TRIPLE WATERMELON' },
+      '🔔': { multiplier: 5, name: 'TRIPLE BELL' },
+      '⭐': { multiplier: 4, name: 'TRIPLE STAR' },
+      '🍇': { multiplier: 3, name: 'TRIPLE GRAPES' },
+      '🔶': { multiplier: 6, name: 'TRIPLE DIAMOND' },
+      '⑦': { multiplier: 8, name: 'TRIPLE SEVEN' },
+      '💎': { multiplier: 25, name: 'DIAMOND JACKPOT' },
+      '👑': { multiplier: 15, name: 'CROWN JACKPOT' },
       '💀': { multiplier: 0, name: 'SKULL BUST' },
-      '🔥': { multiplier: 10, name: 'FIRE BONUS' } // уменьшено с 15
+      '🔥': { multiplier: 10, name: 'FIRE BONUS' }
     };
     return tripleWins[a] || null;
   }
   
-  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ (уменьшены множители)
-  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 5, name: 'DIAMOND STAR' }; // уменьшено с 8
-  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 4, name: 'CROWN STAR' }; // уменьшено с 6
-  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 3, name: 'SEVEN STAR' }; // уменьшено с 5
-  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 2.5, name: 'BELL STAR' }; // уменьшено с 4
+  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ
+  if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 5, name: 'DIAMOND STAR' };
+  if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 4, name: 'CROWN STAR' };
+  if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 3, name: 'SEVEN STAR' };
+  if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 2.5, name: 'BELL STAR' };
   
-  // 3. ДВОЙНЫЕ КОМБИНАЦИИ (уменьшены множители и добавлены ограничения)
+  // 3. ДВОЙНЫЕ КОМБИНАЦИИ
   if (a === b || a === c || b === c) {
     let doubleSymbol;
     if (a === b) doubleSymbol = a;
@@ -64,46 +65,49 @@ const getWinForCombination = (symbols) => {
     
     // УСЛОВИЕ: для некоторых символов двойные комбинации не считаются выигрышными
     if (doubleSymbol === '🍒' || doubleSymbol === '🍋' || doubleSymbol === '🍊') {
-      // Для базовых фруктов двойные комбинации не приносят выигрыша
       return null;
     }
     
     const doubleWins = {
-      '🍉': { multiplier: 0.5, name: 'DOUBLE WATERMELON' }, // уменьшено с 1
-      '🔔': { multiplier: 1, name: 'DOUBLE BELL' }, // уменьшено с 1.5
-      '⭐': { multiplier: 0.5, name: 'DOUBLE STAR' }, // уменьшено с 1
-      '🍇': { multiplier: 0.5, name: 'DOUBLE GRAPES' }, // уменьшено с 1
-      '🔶': { multiplier: 1, name: 'DOUBLE DIAMOND' }, // уменьшено с 2
-      '⑦': { multiplier: 1.5, name: 'DOUBLE SEVEN' }, // уменьшено с 2.5
-      '💎': { multiplier: 2, name: 'DOUBLE PREMIUM DIAMOND' }, // уменьшено с 4
-      '👑': { multiplier: 1.5, name: 'DOUBLE CROWN' }, // уменьшено с 3
+      '🍉': { multiplier: 0.5, name: 'DOUBLE WATERMELON' },
+      '🔔': { multiplier: 1, name: 'DOUBLE BELL' },
+      '⭐': { multiplier: 0.5, name: 'DOUBLE STAR' },
+      '🍇': { multiplier: 0.5, name: 'DOUBLE GRAPES' },
+      '🔶': { multiplier: 1, name: 'DOUBLE DIAMOND' },
+      '⑦': { multiplier: 1.5, name: 'DOUBLE SEVEN' },
+      '💎': { multiplier: 2, name: 'DOUBLE PREMIUM DIAMOND' },
+      '👑': { multiplier: 1.5, name: 'DOUBLE CROWN' },
       '💀': { multiplier: 0, name: 'DOUBLE SKULL' },
-      '🔥': { multiplier: 1, name: 'DOUBLE FIRE' } // уменьшено с 2
+      '🔥': { multiplier: 1, name: 'DOUBLE FIRE' }
     };
     
     return doubleWins[doubleSymbol] || null;
   }
   
-  // 4. ФРУКТОВЫЕ МИКСЫ (уменьшен множитель и добавлено условие)
+  // 4. ФРУКТОВЫЕ МИКСЫ
   const fruits = ['🍒', '🍋', '🍊', '🍉', '🍇'];
   const isAllFruits = fruits.includes(a) && fruits.includes(b) && fruits.includes(c);
   const uniqueFruits = new Set([a, b, c]);
   
   // Только если все три фрукта РАЗНЫЕ
   if (isAllFruits && uniqueFruits.size === 3) {
-    return { multiplier: 0.8, name: 'FRUIT MIX' }; // уменьшено с 1.2
+    return { multiplier: 0.8, name: 'FRUIT MIX' };
   }
   
   return null;
 };
 
-// ОСТАЛЬНОЙ КОД БЕЗ ИЗМЕНЕНИЙ
-function Home({ userData, updateUserData, isActive }) {
+function Home({ userData, updateUserData, isActive, language = 'english' }) {
   const [selectedOption, setSelectedOption] = useState('ton');
   const [isSpinning, setIsSpinning] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showBetModal, setShowBetModal] = useState(false);
-  const [betResult, setBetResult] = useState('Welcome! Place your bet and spin!');
+  
+  // Получаем переводы для текущего языка
+  const t = (translations[language] && translations[language].home) ? translations[language].home : translations.english.home;
+  const commonT = (translations[language] && translations[language].common) ? translations[language].common : translations.english.common;
+  
+  const [betResult, setBetResult] = useState(t.welcomeMessage || 'Welcome! Place your bet and spin!');
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiOpacity, setConfettiOpacity] = useState(1);
   const [betAmount, setBetAmount] = useState(0.1);
@@ -383,13 +387,13 @@ function Home({ userData, updateUserData, isActive }) {
     
     console.log('🎮 НАЧАЛО ВРАЩЕНИЯ С ПРЕДОПРЕДЕЛЕННЫМИ СИМВОЛАМИ:', nextSpinSymbols);
     setIsSpinning(true);
-    setBetResult('Spinning...');
+    setBetResult(t.spinning || 'Spinning...');
     setShowConfetti(false);
 
     // Проверяем баланс перед ставкой
     if (selectedOption === 'ton') {
       if (betAmount > safeUserData.ton_amount) {
-        setBetResult('Not enough TON for this bet!');
+        setBetResult(t.notEnoughTON || 'Not enough TON for this bet!');
         setIsSpinning(false);
         return;
       }
@@ -435,7 +439,8 @@ function Home({ userData, updateUserData, isActive }) {
               if (winCombination) {
                 if (winCombination.multiplier === 0) {
                   // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
-                  setBetResult('BUST! ' + winCombination.name + ' - you lose your bet!');
+                  const bustMessage = formatString(t.bustMessage || 'BUST! {name} - you lose your bet!', { name: winCombination.name });
+                  setBetResult(bustMessage);
                   await updateTonAmountInDB(-betAmount);
                   // Обновляем статистику - проигрыш
                   await updateStatisticsInDB(betAmount, 0, false);
@@ -443,7 +448,12 @@ function Home({ userData, updateUserData, isActive }) {
                   // ВЫИГРЫШ - увеличиваем TON баланс на чистый выигрыш
                   winAmount = winCombination.multiplier * betAmount;
                   netWin = winAmount - betAmount; // Чистый выигрыш
-                  setBetResult(`Win! ${winCombination.name} x${winCombination.multiplier} (${winAmount.toFixed(2)} TON)`);
+                  const winMessage = formatString(t.winMessage || 'Win! {name} x{multiplier} ({amount} TON)', { 
+                    name: winCombination.name, 
+                    multiplier: winCombination.multiplier, 
+                    amount: winAmount.toFixed(2) 
+                  });
+                  setBetResult(winMessage);
                   
                   await updateTonAmountInDB(netWin);
                   // Обновляем статистику - выигрыш
@@ -453,7 +463,7 @@ function Home({ userData, updateUserData, isActive }) {
                 }
               } else {
                 // ПРОИГРЫШ - уменьшаем TON баланс на сумму ставки
-                setBetResult('No win this time. Try again!');
+                setBetResult(t.noWinMessage || 'No win this time. Try again!');
                 await updateTonAmountInDB(-betAmount);
                 // Обновляем статистику - проигрыш
                 await updateStatisticsInDB(betAmount, 0, false);
@@ -472,7 +482,8 @@ function Home({ userData, updateUserData, isActive }) {
               setIsSpinning(false);
             } catch (error) {
               console.error('❌ Error processing result:', error);
-              setBetResult('Error processing result: ' + error.message);
+              const errorMessage = formatString(t.errorProcessing || 'Error processing result: {error}', { error: error.message });
+              setBetResult(errorMessage);
               setIsSpinning(false);
             }
           };
@@ -482,7 +493,8 @@ function Home({ userData, updateUserData, isActive }) {
       }, symbolChangeInterval);
     } catch (error) {
       console.error('❌ Error during spin process:', error);
-      setBetResult('Error during spin: ' + error.message);
+      const errorMessage = formatString(t.errorDuringSpin || 'Error during spin: {error}', { error: error.message });
+      setBetResult(errorMessage);
       setIsSpinning(false);
     }
   }, [
@@ -497,7 +509,8 @@ function Home({ userData, updateUserData, isActive }) {
     updateBetAmountInDB,
     updateTonAmountInDB,
     updateCoinsInDB,
-    updateStatisticsInDB
+    updateStatisticsInDB,
+    t
   ]);
 
   // Очистка анимации при размонтировании
@@ -523,12 +536,12 @@ function Home({ userData, updateUserData, isActive }) {
   const handleBetConfirm = useCallback(() => {
     console.log('✅ Подтверждение ставки с предопределенными символами:', nextSpinSymbols);
     if (betAmount <= 0) {
-      setBetResult('Please select a valid bet amount');
+      setBetResult(t.pleaseSelectValidBet || 'Please select a valid bet amount');
       return;
     }
     
     if (betAmount > safeUserData.ton_amount) {
-      setBetResult('Not enough TON for this bet!');
+      setBetResult(t.notEnoughTON || 'Not enough TON for this bet!');
       return;
     }
     
@@ -536,7 +549,7 @@ function Home({ userData, updateUserData, isActive }) {
     setTimeout(() => {
       spinSlotMachine();
     }, 300);
-  }, [betAmount, safeUserData.ton_amount, handleCloseBetModal, spinSlotMachine, nextSpinSymbols]);
+  }, [betAmount, safeUserData.ton_amount, handleCloseBetModal, spinSlotMachine, nextSpinSymbols, t]);
 
   const handleBetButtonClick = useCallback((amount) => {
     console.log('💰 Изменение ставки на:', amount);
@@ -589,6 +602,11 @@ function Home({ userData, updateUserData, isActive }) {
     }
   }, []);
 
+  if (!t) {
+    console.error('Translation not found for language:', language);
+    return <div>Error loading translations</div>;
+  }
+
   return (
     <div className="container">
       {showConfetti && (
@@ -617,6 +635,7 @@ function Home({ userData, updateUserData, isActive }) {
 
       <BalanceSection 
         userData={safeUserData} 
+        language={language}
       />
 
       <div className="slot-machine">
@@ -637,13 +656,16 @@ function Home({ userData, updateUserData, isActive }) {
         <div className="slot-overlay"></div>
       </div>
 
-      <BetResultAndInstruction betResult={betResult} />
+      <BetResultAndInstruction 
+        betResult={betResult} 
+        language={language}
+      />
 
       <button 
         className="instructions-button"
         onClick={handleInstructionsClick}
       >
-        📖 Instructions
+        {commonT.instructions}
       </button>
 
       <div className="choice-buttons">
@@ -651,13 +673,13 @@ function Home({ userData, updateUserData, isActive }) {
           className={`choice-btn ${selectedOption === 'ton' ? 'active' : ''}`}
           onClick={() => setSelectedOption('ton')}
         >
-          Spin on TON
+          {commonT.spinOnTON}
         </button>
         <button 
           className={`choice-btn ${selectedOption === 'gifts' ? 'active' : ''}`}
           onClick={() => setSelectedOption('gifts')}
         >
-          Spin on Gifts
+          {commonT.spinOnGifts}
         </button>
       </div>
 
@@ -667,20 +689,21 @@ function Home({ userData, updateUserData, isActive }) {
         disabled={isSpinning || selectedOption === 'gifts'}
       >
         {selectedOption === 'gifts' ? (
-          'Coming soon'
+          t.comingSoon
         ) : isSpinning ? (
           <>
             <div className="spinner"></div>
-            Spinning...
+            {t.spinning}
           </>
         ) : (
-          'SPIN'
+          t.spinButton
         )}
       </button>
 
       <InstructionsModal 
         showInstructions={showInstructions} 
-        onClose={handleCloseInstructions} 
+        onClose={handleCloseInstructions}
+        language={language}
       />
       
       <BetModal 
@@ -690,9 +713,10 @@ function Home({ userData, updateUserData, isActive }) {
         onClose={handleCloseBetModal}
         onConfirm={handleBetConfirm}
         onBetChange={handleBetButtonClick}
+        language={language}
       />
       
-      <Menu />
+      <Menu language={language} />
     </div>
   );
 }

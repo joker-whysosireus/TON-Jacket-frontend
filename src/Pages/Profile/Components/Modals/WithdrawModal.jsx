@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import TonLogo from '../../../../Public/TonLogo.png';
+import { translations } from '../../../../Assets/Lang/translation';
 import './Modals.css';
 
-function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, withdrawSuccess }) {
+function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, withdrawSuccess, language = 'english' }) {
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
+
+    // Получаем переводы для текущего языка
+    const t = translations[language]?.profileModals?.withdraw || translations.english.profileModals.withdraw;
+    const balanceT = translations[language]?.balance || translations.english.balance;
 
     const TonLogoIcon = ({ size = 20, className = "" }) => {
         return (
@@ -62,7 +67,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
         <div className="convert-modal-overlay" onClick={onClose}>
             <div className="convert-modal-content withdraw-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="convert-modal-header">
-                    <h2>💰 Withdraw TON</h2>
+                    <h2>{t.title}</h2>
                     <button className="convert-modal-close" onClick={onClose}>×</button>
                 </div>
                 
@@ -71,17 +76,17 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                         <div className="balance-content-with-logo">
                             <TonLogoIcon size={32} className="ton-logo-align" />
                             <div className="convert-balance-amount withdraw-balance-amount">
-                                {userData?.ton_amount?.toFixed(3) || '0.000'} TON
+                                {userData?.ton_amount?.toFixed(3) || '0.000'} {balanceT.ton}
                             </div>
                         </div>
-                        <div className="convert-conversion-info">Available for withdrawal</div>
+                        <div className="convert-conversion-info">{t.availableForWithdrawal}</div>
                     </div>
 
                     <div className="convert-modal-input-section">
                         <div className="withdraw-input-group">
                             <input
                                 type="text" 
-                                placeholder="Wallet address (EQ...)"
+                                placeholder={t.walletPlaceholder}
                                 value={walletAddress}
                                 onChange={(e) => setWalletAddress(e.target.value)}
                                 className="wallet-address-input"
@@ -91,7 +96,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                         <div className="convert-input-group">
                             <input
                                 type="text"
-                                placeholder="Amount (TON)"
+                                placeholder={t.amountPlaceholder}
                                 value={withdrawAmount}
                                 onChange={handleWithdrawAmountChange}
                                 className="convert-amount-input"
@@ -101,13 +106,13 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                                 className="convert-max-button"
                                 disabled={isWithdrawing}
                             >
-                                MAX
+                                {t.maxButton}
                             </button>
                         </div>
 
                         <div className="withdraw-notice">
-                            <p>⚠️ Withdrawal may take up to 21 days to process.</p>
-                            <p>The bot will send you a notification when your TON transfer is completed.</p>
+                            <p>{t.notice1}</p>
+                            <p>{t.notice2}</p>
                         </div>
 
                         <button
@@ -117,15 +122,15 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                         >
                             {isWithdrawing ? (
                                 withdrawSuccess ? (
-                                    'Success!'
+                                    t.success
                                 ) : (
                                     <>
                                         <div className="spinner"></div>
-                                        Processing...
+                                        {t.processing}
                                     </>
                                 )
                             ) : (
-                                'WITHDRAW TON'
+                                t.withdrawButton
                             )}
                         </button>
                     </div>

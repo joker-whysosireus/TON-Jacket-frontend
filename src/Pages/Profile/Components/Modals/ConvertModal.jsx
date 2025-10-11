@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
+import { translations } from '../../../../Assets/Lang/translation';
 import './Modals.css';
 
-function ConvertModal({ show, onClose, userData, onConvert, isConverting, convertSuccess }) {
+function ConvertModal({ show, onClose, userData, onConvert, isConverting, convertSuccess, language = 'english' }) {
     const [coinsAmount, setCoinsAmount] = useState('');
     const [tonEquivalent, setTonEquivalent] = useState(0);
     const conversionRate = 0.00001;
     const minConvertAmount = 1000;
+
+    // Получаем переводы для текущего языка
+    const t = translations[language]?.profileModals?.convert || translations.english.profileModals.convert;
+    const balanceT = translations[language]?.balance || translations.english.balance;
 
     useEffect(() => {
         const amount = parseFloat(coinsAmount) || 0;
@@ -26,7 +31,7 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
         <div className="convert-modal-overlay" onClick={onClose}>
             <div className="convert-modal-content convert-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="convert-modal-header">
-                    <h2>💰 Convert Coins to TON</h2>
+                    <h2>{t.title}</h2>
                     <button className="convert-modal-close" onClick={onClose}>×</button>
                 </div>
                 
@@ -35,20 +40,20 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                         <div className="convert-balance-amount">
                             {userData?.coins?.toFixed(2) || '0.00'} 🏅
                         </div>
-                        <div className="convert-conversion-info">Available for conversion</div>
+                        <div className="convert-conversion-info">{t.availableForConversion}</div>
                         <div className="convert-rate-info">
-                            🏅1000 coins = 0.01 TON
+                            {t.conversionRate}
                         </div>
                         <div className="convert-minimum-info">
-                            Minimum conversion: 1000 coins
+                            {t.minimumConversion}
                         </div>
                     </div>
 
                     <div className="convert-modal-input-section">
                         <div className="convert-conversion-result">
-                            <div className="convert-conversion-label">You will receive</div>
+                            <div className="convert-conversion-label">{t.youWillReceive}</div>
                             <div className="convert-ton-amount">
-                                {((userData?.coins || 0) * conversionRate).toFixed(2)} TON
+                                {((userData?.coins || 0) * conversionRate).toFixed(2)} {balanceT.ton}
                             </div>
                         </div>
 
@@ -59,12 +64,15 @@ function ConvertModal({ show, onClose, userData, onConvert, isConverting, conver
                         >
                             {isConverting ? (
                                 convertSuccess ? (
-                                    'Success!'
+                                    t.success
                                 ) : (
-                                    <div className="spinner"></div>
+                                    <>
+                                        <div className="spinner"></div>
+                                        {t.converting}
+                                    </>
                                 )
                             ) : (
-                                'CONVERT TO TON'
+                                t.convertButton
                             )}
                         </button>
                     </div>

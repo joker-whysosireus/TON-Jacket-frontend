@@ -87,7 +87,7 @@
 
 .profile-card {
     border-radius: 12px;
-    background: #ffffff;
+    background: #0f0f0f;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
@@ -110,7 +110,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #000000;
+    background: white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,7 +120,7 @@
 .card-icon svg {
     width: 24px;
     height: 24px;
-    color: #ffffff;
+    color: black;
 }
 
 .card-text {
@@ -130,7 +130,7 @@
 .card-title {
     font-size: 18px;
     font-weight: 700;
-    color: #000000;
+    color: white;
     margin: 0 0 6px 0;
 }
 

@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import TonLogo from '../../../../Public/TonLogo.png';
+import { translations, formatString } from '../../../../Assets/Lang/translation';
 import './Modals.css';
 
-function DepositModal({ show, onClose, userData, onDeposit, isDepositing, depositSuccess }) {
+function DepositModal({ show, onClose, userData, onDeposit, isDepositing, depositSuccess, language = 'english' }) {
     const [depositAmount, setDepositAmount] = useState('');
     const fixedAmounts = [1, 5, 10, 25, 50, 100];
+
+    // Получаем переводы для текущего языка
+    const t = translations[language]?.profileModals?.deposit || translations.english.profileModals.deposit;
+    const balanceT = translations[language]?.balance || translations.english.balance;
 
     const TonLogoIcon = ({ size = 20, className = "" }) => {
         return (
@@ -36,18 +41,18 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
         <div className="convert-modal-overlay" onClick={onClose} style={{ zIndex: 999 }}>
             <div className="convert-modal-content deposit-modal" onClick={(e) => e.stopPropagation()} style={{ zIndex: 1000 }}>
                 <div className="convert-modal-header">
-                    <h2>💰 Deposit TON</h2>
+                    <h2>{t.title}</h2>
                     <button className="convert-modal-close" onClick={onClose}>×</button>
                 </div>
                 
                 <div className="convert-modal-body">
                     <div className="deposit-amount-display">
                         <TonLogoIcon size={32} />
-                        <span className="deposit-amount-text">{depositAmount || '0'} TON</span>
+                        <span className="deposit-amount-text">{depositAmount || '0'} {balanceT.ton}</span>
                     </div>
 
                     <div className="deposit-info">
-                        <p>Select amount to deposit</p>
+                        <p>{t.selectAmount}</p>
                     </div>
 
                     <div className="bet-modal-amounts">
@@ -59,7 +64,7 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                                     onClick={() => handleFixedAmountClick(amount)}
                                     disabled={isDepositing}
                                 >
-                                    {amount} TON
+                                    {amount} {balanceT.ton}
                                 </button>
                             ))}
                         </div>
@@ -72,12 +77,15 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                     >
                         {isDepositing ? (
                             depositSuccess ? (
-                                'Success!'
+                                t.success
                             ) : (
-                                <div className="spinner"></div>
+                                <>
+                                    <div className="spinner"></div>
+                                    {t.depositing}
+                                </>
                             )
                         ) : (
-                            `Deposit ${depositAmount} TON`
+                            formatString(t.depositButton, { amount: depositAmount })
                         )}
                     </button>
                 </div>
