@@ -204,13 +204,31 @@
 }
 
 @media (min-height: 790px) and (max-height: 800px) {
-    .profile-header-section {
-        padding-top: 25px;
-        padding-bottom: 20px;
+    .wallet-connect-section {
+        margin-bottom: 5px;
+    }
+
+    .header-description {
+        font-size: 12px;
+        padding: 0 7px;
     }
     
     .header-icon {
-        font-size: 55px;
+        font-size: 50px;
+    }
+    .profile-header-section {
+        padding-top: 5px;
+        padding-bottom: 10px;
+    }
+    
+    .header-icon {
+        font-size: 40px;
+        margin-bottom: 8px;
+    }
+    
+    .profile-cards-section {
+        gap: 10px;
+        margin-top: 10px;
     }
 }
 
