@@ -8,7 +8,7 @@ function Gifts({ userData, updateUserData, language = 'english' }) {
     const t = translations[language]?.gifts || translations.english.gifts;
 
     const openChannelPost = () => {
-        window.open('https://t.me/ton_mania_channel/1', '_blank');
+        window.open('https://t.me/ton_mania_channel/20', '_blank');
     };
 
     return (
