@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './BalanceSection.css';
 import TonLogo from '../../../../Public/TonLogo.png';
 
@@ -25,9 +26,19 @@ const GoldIcon = ({ size = 20, className = "" }) => {
 };
 
 const BalanceSection = ({ userData, onAddBalance }) => {
+  const navigate = useNavigate();
+  
   const safeUserData = userData || {
     ton_amount: 100.000,
     coins: 500.000
+  };
+
+  const handleTonButtonClick = () => {
+    navigate('/profile');
+  };
+
+  const handleCoinsButtonClick = () => {
+    navigate('/tasks');
   };
 
   return (
@@ -42,8 +53,8 @@ const BalanceSection = ({ userData, onAddBalance }) => {
         </div>
         <button 
           className="balance-add-btn"
-          onClick={() => onAddBalance('ton', 10)}
-          title="Add TON"
+          onClick={handleTonButtonClick}
+          title="Go to Profile"
         >
           +
         </button>
@@ -59,8 +70,8 @@ const BalanceSection = ({ userData, onAddBalance }) => {
         </div>
         <button 
           className="balance-add-btn-coins"
-          onClick={() => onAddBalance('coins', 100)}
-          title="Add Coins"
+          onClick={handleCoinsButtonClick}
+          title="Go to Tasks"
         >
           +
         </button>

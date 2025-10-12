@@ -44,6 +44,11 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     }, [tasks]);
 
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
+        // Для задачи с рекламой (task0) не выполняем никаких действий
+        if (taskKey === 'task0') {
+            return;
+        }
+
         // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
@@ -95,6 +100,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     const getButtonText = (task, taskKey) => {
         if (tasks[taskKey]) {
             return t.done || 'Done!';
+        } else if (taskKey === 'task0') {
+            return 'Soon'; // Текст "Soon" для рекламной задачи
         } else if (task.type === 'friends' || task.type === 'bet') {
             if (task.currentProgress >= task.requiredAmount) {
                 return task.buttonText;
@@ -132,7 +139,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             rewardAmount: 500,
             requiredAmount: 1,
             currentProgress: 0,
-            buttonText: t.watch || 'Soon',
+            buttonText: t.watch || 'Watch',
             taskKey: 'task0'
         },
         {
@@ -246,7 +253,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isCompleted = tasks[task.taskKey];
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
-                        const isDisabled = isCompleted || !isAvailable;
+                        // Для задачи task0 всегда disabled, для остальных - стандартная логика
+                        const isDisabled = task.taskKey === 'task0' ? true : (isCompleted || !isAvailable);
 
                         return (
                             <div 

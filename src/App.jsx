@@ -79,7 +79,7 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        if (['/', '/friends', '/tasks', '/gifts'].includes(location.pathname)) {
+        if (['/', '/friends', '/tasks', '/gifts', '/profile'].includes(location.pathname)) {
             document.body.classList.add('no-scroll');
         } else {
             document.body.classList.remove('no-scroll');
