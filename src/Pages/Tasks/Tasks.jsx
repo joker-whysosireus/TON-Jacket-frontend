@@ -132,7 +132,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             rewardAmount: 500,
             requiredAmount: 1,
             currentProgress: 0,
-            buttonText: t.watch || 'Watch',
+            buttonText: t.watch || 'Soon',
             taskKey: 'task0'
         },
         {
