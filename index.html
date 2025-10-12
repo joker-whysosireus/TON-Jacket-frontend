@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Jacket</title>
+    <title>TON Mania</title>
     
     <link rel="stylesheet" href="index.css">
     
     <!-- Telegram Web App SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const adexiumWidget = new AdexiumWidget({wid: '7838aa23-a5ff-4cc5-97e2-1b0bfd8c6bef', adFormat: 'interstitial'});
+            adexiumWidget.autoMode();
+        });
+    </script>
 </head>
 <body>
     <div id="root"></div>
