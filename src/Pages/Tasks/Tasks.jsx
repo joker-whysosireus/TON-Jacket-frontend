@@ -44,17 +44,25 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
+    // Проверка доступности GigaPub
     useEffect(() => {
         const checkAdAvailability = () => {
             const isAvailable = !!(window.showGiga && typeof window.showGiga === 'function');
+            console.log('🔍 Проверка доступности рекламы:', { 
+                showGiga: window.showGiga,
+                type: typeof window.showGiga,
+                isAvailable 
+            });
+            
             setAdButtonState(prev => ({ ...prev, isAvailable }));
         };
 
         checkAdAvailability();
         const interval = setInterval(checkAdAvailability, 3000);
         return () => clearInterval(interval);
-    }, [adButtonState.isAvailable]);
+    }, []);
 
+    // Таймер кулдауна
     useEffect(() => {
         if (adButtonState.cooldown <= 0) return;
 
@@ -68,17 +76,17 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(timer);
     }, [adButtonState.cooldown]);
 
-    // ИСПРАВЛЕННАЯ функция начисления награды
-    const addCoins = async (amount) => {
-        console.log('💰 Начинаем начисление монет:', amount);
-        alert(`💰 Пытаемся начислить ${amount} монет`);
+    // ЕДИНАЯ функция для начисления награды - используется и для рекламы и для обычных задач
+    const addCoins = async (taskId, amount) => {
+        console.log('💰 Начинаем начисление монет:', { taskId, amount });
+        alert(`💰 Пытаемся начислить ${amount} монет для задачи ${taskId}`);
         
         try {
-            // ИСПРАВЛЕНО: правильные ключи - taskId и telegramUserId
+            // ВАЖНО: правильные ключи - taskId и telegramUserId
             const requestData = {
-                taskId: 0, // было taskld (строчная L вместо i)
+                taskId: taskId,
                 rewardAmount: amount,
-                telegramUserId: userData.telegram_user_id // было telegramUserld (строчная L вместо i)
+                telegramUserId: userData.telegram_user_id
             };
             
             console.log('📤 Отправляем запрос с данными:', requestData);
@@ -114,30 +122,16 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
+    // Функция для рекламы - использует addCoins
     const handleAdTask = async () => {
         console.log('🎬 НАЧАЛО: Обработка рекламной задачи');
         alert('🎬 НАЧАЛО: Обработка рекламной задачи');
 
-        if (!adButtonState.isAvailable) {
-            console.log('❌ Реклама недоступна');
-            alert('❌ Реклама недоступна - функция showGiga не найдена');
+        if (!adButtonState.isAvailable || adButtonState.isLoading || adButtonState.cooldown > 0) {
+            console.log('❌ Реклама недоступна или в кулдауне');
+            alert('❌ Реклама недоступна или в кулдауне');
             return;
         }
-
-        if (adButtonState.isLoading) {
-            console.log('⏳ Реклама уже загружается');
-            alert('⏳ Реклама уже загружается');
-            return;
-        }
-
-        if (adButtonState.cooldown > 0) {
-            console.log('⏰ Реклама в кулдауне:', adButtonState.cooldown);
-            alert(`⏰ Реклама в кулдауне: ${adButtonState.cooldown} сек`);
-            return;
-        }
-
-        console.log('✅ Все проверки пройдены, начинаем показ рекламы');
-        alert('✅ Все проверки пройдены, начинаем показ рекламы');
 
         setAdButtonState(prev => ({ ...prev, isLoading: true }));
         alert('🔄 Устанавливаем состояние загрузки');
@@ -151,14 +145,15 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             console.log('✅ Реклама успешно показана');
             alert('✅ Реклама успешно показана!');
 
-            console.log('💰 Начинаем начисление награды...');
-            alert('💰 Начинаем начисление награды...');
+            // ИСПОЛЬЗУЕМ addCoins для начисления награды
+            console.log('💰 Начинаем начисление награды через addCoins...');
+            alert('💰 Начинаем начисление награды через addCoins...');
             
-            const success = await addCoins(75);
+            const success = await addCoins(0, 75); // taskId = 0 для рекламы
             
             if (success) {
-                console.log('🎉 Награда успешно начислена');
-                alert('🎉 Награда успешно начислена!');
+                console.log('🎉 Награда успешно начислена через addCoins');
+                alert('🎉 Награда успешно начислена через addCoins!');
                 
                 setTasks(prev => ({ ...prev, task0: true }));
                 alert('✅ Задача помечена как выполненная');
@@ -166,8 +161,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 setAdButtonState(prev => ({ ...prev, cooldown: 5 }));
                 alert('⏰ Установлен кулдаун 5 секунд');
             } else {
-                console.error('❌ Не удалось начислить награду');
-                alert('❌ Не удалось начислить награду');
+                console.error('❌ Не удалось начислить награду через addCoins');
+                alert('❌ Не удалось начислить награду через addCoins');
             }
 
         } catch (error) {
@@ -175,15 +170,16 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             alert(`❌ Ошибка показа рекламы: ${error.message}`);
             
             if (window.AdGigaFallback) {
-                console.log('🔄 Пробуем резервную рекламу...');
-                alert('🔄 Пробуем резервную рекламу...');
-                
                 try {
+                    console.log('🔄 Пробуем резервную рекламу...');
+                    alert('🔄 Пробуем резервную рекламу...');
+                    
                     await window.AdGigaFallback();
                     console.log('✅ Резервная реклама показана');
                     alert('✅ Резервная реклама показана');
                     
-                    const success = await addCoins(75);
+                    // ИСПОЛЬЗУЕМ addCoins и для fallback
+                    const success = await addCoins(0, 75);
                     if (success) {
                         setTasks(prev => ({ ...prev, task0: true }));
                         setAdButtonState(prev => ({ ...prev, cooldown: 5 }));
@@ -193,9 +189,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                     console.error('❌ Ошибка резервной рекламы:', fallbackError);
                     alert(`❌ Ошибка резервной рекламы: ${fallbackError.message}`);
                 }
-            } else {
-                console.log('❌ Резервная реклама недоступна');
-                alert('❌ Резервная реклама недоступна');
             }
         } finally {
             setAdButtonState(prev => ({ ...prev, isLoading: false }));
@@ -204,9 +197,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // Остальной код без изменений
+    // Функция для обычных задач - ТАКЖЕ использует addCoins
     const handleRegularTask = async (taskId, rewardAmount, taskKey, channel = null) => {
-        console.log(`🎯 Обрабатываем обычную задачу: ${taskKey}`);
+        console.log(`🎯 Обрабатываем обычную задачу: ${taskKey} через addCoins`);
         
         if (tasks[taskKey]) {
             console.log('⏭️ Задача уже выполнена');
@@ -219,30 +212,14 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
-        try {
-            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    taskId: taskId,
-                    rewardAmount: rewardAmount,
-                    telegramUserId: userData.telegram_user_id
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                updateUserData(data.userData);
-                setTasks(prev => ({ ...prev, [taskKey]: true }));
-                console.log(`✅ Задача ${taskKey} выполнена`);
-            } else {
-                console.error(`❌ Ошибка задачи ${taskKey}:`, data.error);
-            }
-        } catch (error) {
-            console.error('❌ Ошибка выполнения задачи:', error);
+        // ИСПОЛЬЗУЕМ addCoins для обычных задач
+        const success = await addCoins(taskId, rewardAmount);
+        
+        if (success) {
+            setTasks(prev => ({ ...prev, [taskKey]: true }));
+            console.log(`✅ Задача ${taskKey} выполнена через addCoins`);
+        } else {
+            console.error(`❌ Ошибка задачи ${taskKey} через addCoins`);
         }
     };
 
