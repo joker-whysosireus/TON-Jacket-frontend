@@ -36,6 +36,11 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return defaultTasks;
     });
 
+    // Состояния для GigaPub рекламы
+    const [gigapubAdAvailable, setGigapubAdAvailable] = useState(false);
+    const [isGigapubLoading, setIsGigapubLoading] = useState(false);
+    const [gigapubCooldown, setGigapubCooldown] = useState(0);
+
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
 
@@ -43,9 +48,127 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
+    // Проверка доступности GigaPub
+    useEffect(() => {
+        const checkGigapubFunction = () => {
+            if (window.showGiga && typeof window.showGiga === 'function') {
+                setGigapubAdAvailable(true);
+            } else {
+                setGigapubAdAvailable(false);
+                if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
+                    window.showGiga = () => window.AdGigaFallback();
+                    setGigapubAdAvailable(true);
+                }
+            }
+        };
+        
+        checkGigapubFunction();
+        const intervalId = setInterval(checkGigapubFunction, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // Таймер для кулдауна GigaPub
+    useEffect(() => {
+        if (gigapubCooldown <= 0) return;
+
+        const interval = setInterval(() => {
+            setGigapubCooldown(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [gigapubCooldown]);
+
+    // Функция для обработки GigaPub рекламы
+    const handleGigapubAd = async () => {
+        if (!gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0) {
+            return;
+        }
+        
+        setIsGigapubLoading(true);
+        
+        try {
+            if (typeof window.showGiga !== 'function') {
+                throw new Error('GigaPub show function not available');
+            }
+            
+            await window.showGiga();
+            
+            // Начисляем 75 coins после успешного просмотра рекламы
+            try {
+                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/increment-coins', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telegramUserId: userData.telegram_user_id,
+                        amount: 75
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateUserData(data.userData);
+                } else {
+                    console.error('Error incrementing coins:', data.error);
+                }
+            } catch (error) {
+                console.error('Error calling increment-coins:', error);
+            }
+            
+            // Устанавливаем кулдаун 5 секунд
+            setGigapubCooldown(5);
+            
+        } catch (error) {
+            console.error('GigaPub ad error:', error);
+            // Пробуем fallback
+            if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
+                try {
+                    await window.AdGigaFallback();
+                    
+                    // Начисляем 75 coins после успешного просмотра fallback рекламы
+                    try {
+                        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/increment-coins', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                telegramUserId: userData.telegram_user_id,
+                                amount: 75
+                            }),
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            updateUserData(data.userData);
+                        }
+                    } catch (coinError) {
+                        console.error('Error incrementing coins:', coinError);
+                    }
+                    
+                    setGigapubCooldown(5);
+                } catch (fallbackError) {
+                    console.error('Fallback ad error:', fallbackError);
+                }
+            }
+        } finally {
+            setIsGigapubLoading(false);
+        }
+    };
+
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
-        // Для задачи с рекламой (task0) не выполняем никаких действий
+        // Для задачи с рекламой (task0) обрабатываем отдельно
         if (taskKey === 'task0') {
+            await handleGigapubAd();
             return;
         }
 
@@ -101,7 +224,13 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         if (tasks[taskKey]) {
             return t.done || 'Done!';
         } else if (taskKey === 'task0') {
-            return 'Soon'; // Текст "Soon" для рекламной задачи
+            if (isGigapubLoading) {
+                return '⏳'; // Спиннер во время загрузки
+            } else if (gigapubCooldown > 0) {
+                return `${gigapubCooldown}s`; // Обратный отсчет
+            } else {
+                return task.buttonText;
+            }
         } else if (task.type === 'friends' || task.type === 'bet') {
             if (task.currentProgress >= task.requiredAmount) {
                 return task.buttonText;
@@ -135,8 +264,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             id: 0,
             type: 'ad',
             title: t.tasks && t.tasks[0] ? t.tasks[0].title : 'Watch a short video',
-            reward: '+500 ' + (balanceT.coins || 'coins'),
-            rewardAmount: 500,
+            reward: '+75 ' + (balanceT.coins || 'coins'),
+            rewardAmount: 75,
             requiredAmount: 1,
             currentProgress: 0,
             buttonText: t.watch || 'Watch',
@@ -253,8 +382,14 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isCompleted = tasks[task.taskKey];
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
-                        // Для задачи task0 всегда disabled, для остальных - стандартная логика
-                        const isDisabled = task.taskKey === 'task0' ? true : (isCompleted || !isAvailable);
+                        
+                        // Для задачи task0 проверяем дополнительные условия
+                        let isDisabled = false;
+                        if (task.taskKey === 'task0') {
+                            isDisabled = !gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0;
+                        } else {
+                            isDisabled = isCompleted || !isAvailable;
+                        }
 
                         return (
                             <div 
@@ -267,7 +402,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                                     <span className="task-reward">{task.reward}</span>
                                 </div>
                                 <button 
-                                    className={`task-action-btn ${isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete'}`}
+                                    className={`task-action-btn ${isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete'} ${task.taskKey === 'task0' && isGigapubLoading ? 'loading' : ''}`}
                                     onClick={() => handleTaskCompletion(
                                         task.id, 
                                         task.rewardAmount, 
