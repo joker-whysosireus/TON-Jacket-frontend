@@ -40,6 +40,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     const [gigapubAdAvailable, setGigapubAdAvailable] = useState(false);
     const [isGigapubLoading, setIsGigapubLoading] = useState(false);
     const [gigapubCooldown, setGigapubCooldown] = useState(0);
+    const [isClaiming, setIsClaiming] = useState(false);
 
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
@@ -52,16 +53,24 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     useEffect(() => {
         const checkGigapubFunction = () => {
             if (window.showGiga && typeof window.showGiga === 'function') {
+                console.log("GigaPub доступен");
                 setGigapubAdAvailable(true);
             } else {
+                console.log("GigaPub недоступен");
                 setGigapubAdAvailable(false);
-                if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
-                    window.showGiga = () => window.AdGigaFallback();
-                    setGigapubAdAvailable(true);
+                // Создаем резервную функцию если нет
+                if (!window.AdGigaFallback) {
+                    window.AdGigaFallback = function() {
+                        return new Promise((resolve) => {
+                            console.log("Используем резервную рекламу");
+                            setTimeout(resolve, 1000);
+                        });
+                    };
                 }
             }
         };
         
+        // Проверяем сразу и затем периодически
         checkGigapubFunction();
         const intervalId = setInterval(checkGigapubFunction, 5000);
         return () => clearInterval(intervalId);
@@ -97,9 +106,12 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 throw new Error('GigaPub show function not available');
             }
             
+            // Правильно вызываем showGiga и ждем завершения
             await window.showGiga();
             
-            // После успешного просмотра рекламы начисляем 75 coins через claim-task
+            console.log("Реклама успешно просмотрена, начисляем награду");
+            
+            // После успешного просмотра рекламы начисляем 75 coins
             try {
                 const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                     method: 'POST',
@@ -117,6 +129,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
                 if (response.ok) {
                     updateUserData(data.userData);
+                    console.log("Награда успешно начислена");
                 } else {
                     console.error('Error claiming task reward:', data.error);
                 }
@@ -129,12 +142,14 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             
         } catch (error) {
             console.error('GigaPub ad error:', error);
-            // Пробуем fallback
+            
+            // Пробуем fallback если есть
             if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
                 try {
+                    console.log("Пробуем резервную рекламу");
                     await window.AdGigaFallback();
                     
-                    // После успешного просмотра fallback рекламы начисляем 75 coins
+                    // Начисляем награду и для fallback
                     try {
                         const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                             method: 'POST',
@@ -152,6 +167,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
                         if (response.ok) {
                             updateUserData(data.userData);
+                            console.log("Награда начислена через резервную систему");
                         }
                     } catch (claimError) {
                         console.error('Error claiming task reward:', claimError);
@@ -174,16 +190,25 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             return;
         }
 
-        // Для остальных задач НЕМЕДЛЕННО обновляем состояние
-        const updatedTasks = { ...tasks, [taskKey]: true };
-        setTasks(updatedTasks);
-        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-
-        if (channel) {
-            window.open(channel, '_blank');
-        }
+        // Для остальных задач обычная логика
+        if (isClaiming || tasks[taskKey]) return;
         
+        setIsClaiming(true);
+
         try {
+            // Для URL задач открываем ссылку
+            if (channel) {
+                window.open(channel, '_blank', 'noopener,noreferrer');
+                
+                // Ждем 2 секунды перед начислением награды
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            // Обновляем состояние задачи
+            const updatedTasks = { ...tasks, [taskKey]: true };
+            setTasks(updatedTasks);
+            localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
@@ -205,12 +230,16 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
                 localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+                console.error('Error claiming reward:', data.error);
             }
         } catch (error) {
+            console.error('Error claiming reward:', error);
             // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
             setTasks(revertedTasks);
             localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+        } finally {
+            setIsClaiming(false);
         }
     };
 
@@ -376,7 +405,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 </div>
             </div>
 
-            {/* Список заffдач */}
+            {/* Список задач */}
             <div className="tasks-list-wrapper">
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
@@ -390,7 +419,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         if (task.taskKey === 'task0') {
                             isDisabled = !gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0;
                         } else {
-                            isDisabled = isCompleted || !isAvailable;
+                            isDisabled = isCompleted || !isAvailable || isClaiming;
                         }
 
                         return (
