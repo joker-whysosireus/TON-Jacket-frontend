@@ -93,52 +93,67 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(interval);
     }, [gigapubCooldown]);
 
+    // Функция для начисления награды после рекламы
+    const claimAdReward = async () => {
+        try {
+            console.log("Начисляем награду за просмотр рекламы");
+            
+            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: 0,
+                    rewardAmount: 75,
+                    telegramUserId: userData.telegram_user_id
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                updateUserData(data.userData);
+                console.log("Награда успешно начислена");
+                return true;
+            } else {
+                console.error('Error claiming task reward:', data.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error calling claim-task:', error);
+            return false;
+        }
+    };
+
     // Функция для обработки GigaPub рекламы
     const handleGigapubAd = async () => {
         if (!gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0) {
-            return;
+            return false;
         }
         
         setIsGigapubLoading(true);
+        let rewardClaimed = false;
         
         try {
             if (typeof window.showGiga !== 'function') {
                 throw new Error('GigaPub show function not available');
             }
             
-            // Правильно вызываем showGiga и ждем завершения
+            console.log("Показываем рекламу...");
+            
+            // Показываем рекламу и ждем ее завершения
             await window.showGiga();
             
             console.log("Реклама успешно просмотрена, начисляем награду");
             
             // После успешного просмотра рекламы начисляем 75 coins
-            try {
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        taskId: 0, // ID для рекламной задачи
-                        rewardAmount: 75, // 75 coins
-                        telegramUserId: userData.telegram_user_id
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    updateUserData(data.userData);
-                    console.log("Награда успешно начислена");
-                } else {
-                    console.error('Error claiming task reward:', data.error);
-                }
-            } catch (error) {
-                console.error('Error calling claim-task:', error);
-            }
+            rewardClaimed = await claimAdReward();
             
-            // Устанавливаем кулдаун 5 секунд
-            setGigapubCooldown(5);
+            if (rewardClaimed) {
+                // Устанавливаем кулдаун 5 секунд только если награда начислена
+                setGigapubCooldown(5);
+            }
             
         } catch (error) {
             console.error('GigaPub ad error:', error);
@@ -149,31 +164,12 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                     console.log("Пробуем резервную рекламу");
                     await window.AdGigaFallback();
                     
-                    // Начисляем награду и для fallback
-                    try {
-                        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                taskId: 0,
-                                rewardAmount: 75,
-                                telegramUserId: userData.telegram_user_id
-                            }),
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            updateUserData(data.userData);
-                            console.log("Награда начислена через резервную систему");
-                        }
-                    } catch (claimError) {
-                        console.error('Error claiming task reward:', claimError);
-                    }
+                    console.log("Резервная реклама просмотрена, начисляем награду");
+                    rewardClaimed = await claimAdReward();
                     
-                    setGigapubCooldown(5);
+                    if (rewardClaimed) {
+                        setGigapubCooldown(5);
+                    }
                 } catch (fallbackError) {
                     console.error('Fallback ad error:', fallbackError);
                 }
@@ -181,12 +177,21 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         } finally {
             setIsGigapubLoading(false);
         }
+        
+        return rewardClaimed;
     };
 
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
         // Для задачи с рекламой (task0) обрабатываем отдельно
         if (taskKey === 'task0') {
-            await handleGigapubAd();
+            const success = await handleGigapubAd();
+            
+            // Если реклама успешно просмотрена и награда начислена, помечаем задачу как выполненную
+            if (success) {
+                const updatedTasks = { ...tasks, [taskKey]: true };
+                setTasks(updatedTasks);
+                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+            }
             return;
         }
 
@@ -204,11 +209,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            // Обновляем состояние задачи
-            const updatedTasks = { ...tasks, [taskKey]: true };
-            setTasks(updatedTasks);
-            localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
@@ -225,19 +225,15 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
             if (response.ok) {
                 updateUserData(data.userData);
+                // Обновляем состояние задачи только после успешного начисления
+                const updatedTasks = { ...tasks, [taskKey]: true };
+                setTasks(updatedTasks);
+                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
             } else {
-                // Откатываем состояние в случае ошибки
-                const revertedTasks = { ...tasks };
-                setTasks(revertedTasks);
-                localStorage.setItem('tasks', JSON.stringify(revertedTasks));
                 console.error('Error claiming reward:', data.error);
             }
         } catch (error) {
             console.error('Error claiming reward:', error);
-            // Откатываем состояние в случае ошибки
-            const revertedTasks = { ...tasks };
-            setTasks(revertedTasks);
-            localStorage.setItem('tasks', JSON.stringify(revertedTasks));
         } finally {
             setIsClaiming(false);
         }

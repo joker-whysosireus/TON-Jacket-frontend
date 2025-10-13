@@ -9,13 +9,6 @@
     
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            const adexiumWidget = new AdexiumWidget({wid: '7838aa23-a5ff-4cc5-97e2-1b0bfd8c6bef', adFormat: 'push-like'});
-            adexiumWidget.autoMode();
-        });
-    </script>
     
     <!-- GigaPub Script -->
     <script data-project-id="3563">
@@ -46,10 +39,18 @@
                         window.showGiga = function() {
                             return new Promise((resolve, reject) => {
                                 if (window.gigaOfferWallSDK && typeof window.gigaOfferWallSDK.open === 'function') {
-                                    window.gigaOfferWallSDK.open();
+                                    // Добавляем обработчик закрытия
+                                    window.gigaOfferWallSDK.open({
+                                        onClose: function() {
+                                            console.log("GigaPub OfferWall закрыт");
+                                            resolve();
+                                        },
+                                        onError: function(error) {
+                                            console.error("GigaPub OfferWall ошибка:", error);
+                                            reject(new Error(error));
+                                        }
+                                    });
                                     console.log("GigaPub OfferWall открыт");
-                                    // Разрешаем промис после успешного открытия
-                                    resolve();
                                 } else {
                                     const error = "GigaPub SDK недоступен";
                                     console.error(error);
