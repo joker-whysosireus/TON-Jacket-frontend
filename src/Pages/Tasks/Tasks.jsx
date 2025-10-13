@@ -58,19 +58,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             } else {
                 console.log("GigaPub недоступен");
                 setGigapubAdAvailable(false);
-                // Создаем резервную функцию если нет
-                if (!window.AdGigaFallback) {
-                    window.AdGigaFallback = function() {
-                        return new Promise((resolve) => {
-                            console.log("Используем резервную рекламу");
-                            setTimeout(resolve, 1000);
-                        });
-                    };
-                }
             }
         };
         
-        // Проверяем сразу и затем периодически
         checkGigapubFunction();
         const intervalId = setInterval(checkGigapubFunction, 5000);
         return () => clearInterval(intervalId);
@@ -93,10 +83,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(interval);
     }, [gigapubCooldown]);
 
-    // Функция для начисления награды после рекламы
+    // Функция для начисления награды
     const claimAdReward = async () => {
         try {
-            console.log("Начисляем награду за просмотр рекламы");
+            console.log("Начисляем награду за рекламу");
             
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
@@ -133,52 +123,36 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
         
         setIsGigapubLoading(true);
-        let rewardClaimed = false;
         
         try {
+            // 1. СНАЧАЛА начисляем награду
+            console.log("Начисляем награду ДО показа рекламы");
+            const rewardSuccess = await claimAdReward();
+            
+            if (!rewardSuccess) {
+                throw new Error('Не удалось начислить награду');
+            }
+
+            // 2. ПОТОМ показываем рекламу
+            console.log("Показываем рекламу...");
+            
             if (typeof window.showGiga !== 'function') {
                 throw new Error('GigaPub show function not available');
             }
             
-            console.log("Показываем рекламу...");
-            
-            // Показываем рекламу и ждем ее завершения
             await window.showGiga();
+            console.log("Реклама успешно показана");
             
-            console.log("Реклама успешно просмотрена, начисляем награду");
-            
-            // После успешного просмотра рекламы начисляем 75 coins
-            rewardClaimed = await claimAdReward();
-            
-            if (rewardClaimed) {
-                // Устанавливаем кулдаун 5 секунд только если награда начислена
-                setGigapubCooldown(5);
-            }
+            // 3. Устанавливаем кулдаун
+            setGigapubCooldown(5);
+            return true;
             
         } catch (error) {
             console.error('GigaPub ad error:', error);
-            
-            // Пробуем fallback если есть
-            if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
-                try {
-                    console.log("Пробуем резервную рекламу");
-                    await window.AdGigaFallback();
-                    
-                    console.log("Резервная реклама просмотрена, начисляем награду");
-                    rewardClaimed = await claimAdReward();
-                    
-                    if (rewardClaimed) {
-                        setGigapubCooldown(5);
-                    }
-                } catch (fallbackError) {
-                    console.error('Fallback ad error:', fallbackError);
-                }
-            }
+            return false;
         } finally {
             setIsGigapubLoading(false);
         }
-        
-        return rewardClaimed;
     };
 
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
@@ -186,7 +160,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         if (taskKey === 'task0') {
             const success = await handleGigapubAd();
             
-            // Если реклама успешно просмотрена и награда начислена, помечаем задачу как выполненную
+            // Если награда начислена и реклама показана, помечаем задачу как выполненную
             if (success) {
                 const updatedTasks = { ...tasks, [taskKey]: true };
                 setTasks(updatedTasks);
@@ -204,8 +178,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             // Для URL задач открываем ссылку
             if (channel) {
                 window.open(channel, '_blank', 'noopener,noreferrer');
-                
-                // Ждем 2 секунды перед начислением награды
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
@@ -225,7 +197,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
             if (response.ok) {
                 updateUserData(data.userData);
-                // Обновляем состояние задачи только после успешного начисления
                 const updatedTasks = { ...tasks, [taskKey]: true };
                 setTasks(updatedTasks);
                 localStorage.setItem('tasks', JSON.stringify(updatedTasks));
@@ -244,7 +215,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         if (task.type === 'friends' || task.type === 'bet') {
             return task.currentProgress >= task.requiredAmount;
         }
-        return true; // Для ad и subscribe всегда доступны
+        return true;
     };
 
     const getButtonText = (task, taskKey) => {
@@ -252,9 +223,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             return t.done || 'Done!';
         } else if (taskKey === 'task0') {
             if (isGigapubLoading) {
-                return '⏳'; // Спиннер во время загрузки
+                return '⏳';
             } else if (gigapubCooldown > 0) {
-                return `${gigapubCooldown}s`; // Обратный отсчет
+                return `${gigapubCooldown}s`;
             } else {
                 return task.buttonText;
             }
@@ -410,7 +381,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
                         
-                        // Для задачи task0 проверяем дополнительные условия
                         let isDisabled = false;
                         if (task.taskKey === 'task0') {
                             isDisabled = !gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0;
