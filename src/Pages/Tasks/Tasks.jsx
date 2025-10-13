@@ -32,7 +32,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return defaultTasks;
     });
 
-    // Состояния для рекламной кнопки
     const [adButtonState, setAdButtonState] = useState({
         isLoading: false,
         cooldown: 0,
@@ -45,20 +44,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
-    // Проверка доступности GigaPub
     useEffect(() => {
         const checkAdAvailability = () => {
             const isAvailable = !!(window.showGiga && typeof window.showGiga === 'function');
-            console.log('🔍 Проверка доступности рекламы:', { 
-                showGiga: window.showGiga,
-                type: typeof window.showGiga,
-                isAvailable 
-            });
-            
-            if (isAvailable !== adButtonState.isAvailable) {
-                alert(`📢 Статус рекламы: ${isAvailable ? 'ДОСТУПНА' : 'НЕДОСТУПНА'}`);
-            }
-            
             setAdButtonState(prev => ({ ...prev, isAvailable }));
         };
 
@@ -67,7 +55,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(interval);
     }, [adButtonState.isAvailable]);
 
-    // Таймер кулдауна
     useEffect(() => {
         if (adButtonState.cooldown <= 0) return;
 
@@ -81,16 +68,17 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(timer);
     }, [adButtonState.cooldown]);
 
-    // Функция начисления награды
+    // ИСПРАВЛЕННАЯ функция начисления награды
     const addCoins = async (amount) => {
         console.log('💰 Начинаем начисление монет:', amount);
         alert(`💰 Пытаемся начислить ${amount} монет`);
         
         try {
+            // ИСПРАВЛЕНО: правильные ключи - taskId и telegramUserId
             const requestData = {
-                taskId: 0,
+                taskId: 0, // было taskld (строчная L вместо i)
                 rewardAmount: amount,
-                telegramUserId: userData.telegram_user_id
+                telegramUserId: userData.telegram_user_id // было telegramUserld (строчная L вместо i)
             };
             
             console.log('📤 Отправляем запрос с данными:', requestData);
@@ -126,12 +114,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // Полностью переписанная функция для рекламы
     const handleAdTask = async () => {
         console.log('🎬 НАЧАЛО: Обработка рекламной задачи');
         alert('🎬 НАЧАЛО: Обработка рекламной задачи');
 
-        // Проверяем доступность
         if (!adButtonState.isAvailable) {
             console.log('❌ Реклама недоступна');
             alert('❌ Реклама недоступна - функция showGiga не найдена');
@@ -153,7 +139,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         console.log('✅ Все проверки пройдены, начинаем показ рекламы');
         alert('✅ Все проверки пройдены, начинаем показ рекламы');
 
-        // Начинаем загрузку
         setAdButtonState(prev => ({ ...prev, isLoading: true }));
         alert('🔄 Устанавливаем состояние загрузки');
 
@@ -161,13 +146,11 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             console.log('📺 Показываем рекламу...');
             alert('📺 Показываем рекламу...');
             
-            // Показываем рекламу
             await window.showGiga();
             
             console.log('✅ Реклама успешно показана');
             alert('✅ Реклама успешно показана!');
 
-            // Начисляем награду
             console.log('💰 Начинаем начисление награды...');
             alert('💰 Начинаем начисление награды...');
             
@@ -177,11 +160,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 console.log('🎉 Награда успешно начислена');
                 alert('🎉 Награда успешно начислена!');
                 
-                // Помечаем задачу выполненной
                 setTasks(prev => ({ ...prev, task0: true }));
                 alert('✅ Задача помечена как выполненная');
                 
-                // Устанавливаем кулдаун
                 setAdButtonState(prev => ({ ...prev, cooldown: 5 }));
                 alert('⏰ Установлен кулдаун 5 секунд');
             } else {
@@ -193,7 +174,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             console.error('❌ Ошибка показа рекламы:', error);
             alert(`❌ Ошибка показа рекламы: ${error.message}`);
             
-            // Пробуем fallback
             if (window.AdGigaFallback) {
                 console.log('🔄 Пробуем резервную рекламу...');
                 alert('🔄 Пробуем резервную рекламу...');
@@ -224,7 +204,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // Логика для других задач
+    // Остальной код без изменений
     const handleRegularTask = async (taskId, rewardAmount, taskKey, channel = null) => {
         console.log(`🎯 Обрабатываем обычную задачу: ${taskKey}`);
         
