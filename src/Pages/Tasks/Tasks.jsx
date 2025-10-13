@@ -5,10 +5,8 @@ import { translations, formatString } from '../../Assets/Lang/translation';
 import './Tasks.css';
 
 function Tasks({ userData, updateUserData, language = 'english' }) {
-    // Получаем переводы для текущего языка
     const t = translations[language]?.tasks || translations.english.tasks;
     const balanceT = translations[language]?.balance || translations.english.balance;
-    const commonT = translations[language]?.common || translations.english.common;
 
     const [tasks, setTasks] = useState(() => {
         const storedTasksString = localStorage.getItem('tasks');
@@ -26,161 +24,42 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         
         if (storedTasksString) {
             try {
-                const parsedTasks = JSON.parse(storedTasksString);
-                return { ...defaultTasks, ...parsedTasks };
+                return { ...defaultTasks, ...JSON.parse(storedTasksString) };
             } catch (error) {
-                console.error('Error parsing tasks from localStorage:', error);
                 return defaultTasks;
             }
         }
         return defaultTasks;
     });
 
-    // Состояния для GigaPub рекламы
-    const [gigapubAdAvailable, setGigapubAdAvailable] = useState(false);
-    const [isGigapubLoading, setIsGigapubLoading] = useState(false);
-    const [gigapubCooldown, setGigapubCooldown] = useState(0);
-    const [isClaiming, setIsClaiming] = useState(false);
+    const [adButtonState, setAdButtonState] = useState({
+        isLoading: false,
+        cooldown: 0
+    });
 
-    // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
 
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
-    // Проверка доступности GigaPub
+    // Таймер для кулдауна
     useEffect(() => {
-        const checkGigapubFunction = () => {
-            if (window.showGiga && typeof window.showGiga === 'function') {
-                console.log("GigaPub доступен");
-                setGigapubAdAvailable(true);
-            } else {
-                console.log("GigaPub недоступен");
-                setGigapubAdAvailable(false);
-            }
-        };
-        
-        checkGigapubFunction();
-        const intervalId = setInterval(checkGigapubFunction, 5000);
-        return () => clearInterval(intervalId);
-    }, []);
-
-    // Таймер для кулдауна GigaPub
-    useEffect(() => {
-        if (gigapubCooldown <= 0) return;
+        if (adButtonState.cooldown <= 0) return;
 
         const interval = setInterval(() => {
-            setGigapubCooldown(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setAdButtonState(prev => ({
+                ...prev,
+                cooldown: prev.cooldown - 1
+            }));
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [gigapubCooldown]);
+    }, [adButtonState.cooldown]);
 
-    // Функция для начисления награды
-    const claimAdReward = async () => {
+    // Простая функция для начисления награды
+    const claimReward = async (taskId, amount) => {
         try {
-            console.log("Начисляем награду за рекламу");
-            
-            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    taskId: 0,
-                    rewardAmount: 75,
-                    telegramUserId: userData.telegram_user_id
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                updateUserData(data.userData);
-                console.log("Награда успешно начислена");
-                return true;
-            } else {
-                console.error('Error claiming task reward:', data.error);
-                return false;
-            }
-        } catch (error) {
-            console.error('Error calling claim-task:', error);
-            return false;
-        }
-    };
-
-    // Функция для обработки GigaPub рекламы
-    const handleGigapubAd = async () => {
-        if (!gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0) {
-            return false;
-        }
-        
-        setIsGigapubLoading(true);
-        
-        try {
-            // 1. СНАЧАЛА начисляем награду
-            console.log("Начисляем награду ДО показа рекламы");
-            const rewardSuccess = await claimAdReward();
-            
-            if (!rewardSuccess) {
-                throw new Error('Не удалось начислить награду');
-            }
-
-            // 2. ПОТОМ показываем рекламу
-            console.log("Показываем рекламу...");
-            
-            if (typeof window.showGiga !== 'function') {
-                throw new Error('GigaPub show function not available');
-            }
-            
-            await window.showGiga();
-            console.log("Реклама успешно показана");
-            
-            // 3. Устанавливаем кулдаун
-            setGigapubCooldown(5);
-            return true;
-            
-        } catch (error) {
-            console.error('GigaPub ad error:', error);
-            return false;
-        } finally {
-            setIsGigapubLoading(false);
-        }
-    };
-
-    const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
-        // Для задачи с рекламой (task0) обрабатываем отдельно
-        if (taskKey === 'task0') {
-            const success = await handleGigapubAd();
-            
-            // Если награда начислена и реклама показана, помечаем задачу как выполненную
-            if (success) {
-                const updatedTasks = { ...tasks, [taskKey]: true };
-                setTasks(updatedTasks);
-                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-            }
-            return;
-        }
-
-        // Для остальных задач обычная логика
-        if (isClaiming || tasks[taskKey]) return;
-        
-        setIsClaiming(true);
-
-        try {
-            // Для URL задач открываем ссылку
-            if (channel) {
-                window.open(channel, '_blank', 'noopener,noreferrer');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
@@ -188,29 +67,81 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 },
                 body: JSON.stringify({
                     taskId: taskId,
-                    rewardAmount: rewardAmount,
+                    rewardAmount: amount,
                     telegramUserId: userData.telegram_user_id
                 }),
             });
 
             const data = await response.json();
-
+            
             if (response.ok) {
                 updateUserData(data.userData);
-                const updatedTasks = { ...tasks, [taskKey]: true };
-                setTasks(updatedTasks);
-                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-            } else {
-                console.error('Error claiming reward:', data.error);
+                return true;
             }
+            return false;
         } catch (error) {
             console.error('Error claiming reward:', error);
-        } finally {
-            setIsClaiming(false);
+            return false;
         }
     };
 
-    // Проверка доступности кнопок для friends и bet задач
+    // Обработчик для рекламной задачи
+    const handleAdTask = async () => {
+        if (adButtonState.isLoading || adButtonState.cooldown > 0) return;
+
+        // Сразу начисляем награду
+        const rewardSuccess = await claimReward(0, 75);
+        
+        if (rewardSuccess) {
+            // Помечаем задачу как выполненную
+            const updatedTasks = { ...tasks, task0: true };
+            setTasks(updatedTasks);
+            
+            // Устанавливаем кулдаун
+            setAdButtonState({
+                isLoading: false,
+                cooldown: 5
+            });
+
+            // Показываем рекламу после начисления награды
+            try {
+                if (window.showGiga && typeof window.showGiga === 'function') {
+                    await window.showGiga();
+                } else if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
+                    await window.AdGigaFallback();
+                }
+            } catch (error) {
+                console.error('Error showing ad:', error);
+                // Игнорируем ошибки показа рекламы, так как награда уже начислена
+            }
+        }
+    };
+
+    // Обработчик для обычных задач
+    const handleRegularTask = async (taskId, rewardAmount, taskKey, channel = null) => {
+        if (tasks[taskKey]) return;
+
+        if (channel) {
+            window.open(channel, '_blank', 'noopener,noreferrer');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        const success = await claimReward(taskId, rewardAmount);
+        
+        if (success) {
+            const updatedTasks = { ...tasks, [taskKey]: true };
+            setTasks(updatedTasks);
+        }
+    };
+
+    const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
+        if (taskKey === 'task0') {
+            await handleAdTask();
+        } else {
+            await handleRegularTask(taskId, rewardAmount, taskKey, channel);
+        }
+    };
+
     const isTaskAvailable = (task) => {
         if (task.type === 'friends' || task.type === 'bet') {
             return task.currentProgress >= task.requiredAmount;
@@ -222,10 +153,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         if (tasks[taskKey]) {
             return t.done || 'Done!';
         } else if (taskKey === 'task0') {
-            if (isGigapubLoading) {
-                return '⏳';
-            } else if (gigapubCooldown > 0) {
-                return `${gigapubCooldown}s`;
+            if (adButtonState.cooldown > 0) {
+                return `${adButtonState.cooldown}s`;
             } else {
                 return task.buttonText;
             }
@@ -240,23 +169,16 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // Функция для получения иконки задачи
     const getTaskIcon = (task) => {
         switch (task.type) {
-            case 'ad':
-                return '📺';
-            case 'subscribe':
-                return '📢';
-            case 'friends':
-                return '🤝';
-            case 'bet':
-                return '🎰';
-            default:
-                return '📝';
+            case 'ad': return '📺';
+            case 'subscribe': return '📢';
+            case 'friends': return '🤝';
+            case 'bet': return '🎰';
+            default: return '📝';
         }
     };
 
-    // Обновленный taskList с использованием переводов
     const taskList = [
         {
             id: 0,
@@ -363,7 +285,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         <div className="tasks-container">
             <BalanceSection userData={userData} language={language}/>
             
-            {/* Заголовок */}
             <div className="tasks-header">
                 <div className="header-icon">📋</div>
                 <div className="header-text">
@@ -372,7 +293,6 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 </div>
             </div>
 
-            {/* Список задач */}
             <div className="tasks-list-wrapper">
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
@@ -381,12 +301,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
                         
-                        let isDisabled = false;
-                        if (task.taskKey === 'task0') {
-                            isDisabled = !gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0;
-                        } else {
-                            isDisabled = isCompleted || !isAvailable || isClaiming;
-                        }
+                        const isDisabled = task.taskKey === 'task0' 
+                            ? adButtonState.cooldown > 0
+                            : isCompleted || !isAvailable;
 
                         return (
                             <div 
@@ -399,7 +316,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                                     <span className="task-reward">{task.reward}</span>
                                 </div>
                                 <button 
-                                    className={`task-action-btn ${isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete'} ${task.taskKey === 'task0' && isGigapubLoading ? 'loading' : ''}`}
+                                    className={`task-action-btn ${isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete'}`}
                                     onClick={() => handleTaskCompletion(
                                         task.id, 
                                         task.rewardAmount, 
