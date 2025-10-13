@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'production') {
         appName: 'ton_mania', 
     });
 } else {
-    console.log("Telegram Analytics SDK not initialized in development mode.");
+    console.log("Telegram Analytics SDK nottt initialized in development mode.");
 }
 
 const App = () => {

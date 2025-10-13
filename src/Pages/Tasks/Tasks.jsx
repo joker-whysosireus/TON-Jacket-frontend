@@ -376,7 +376,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 </div>
             </div>
 
-            {/* Список задач */}
+            {/* Список заffдач */}
             <div className="tasks-list-wrapper">
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
