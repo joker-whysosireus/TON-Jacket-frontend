@@ -99,16 +99,17 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             
             await window.showGiga();
             
-            // Начисляем 75 coins после успешного просмотра рекламы
+            // После успешного просмотра рекламы начисляем 75 coins через claim-task
             try {
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/increment-coins', {
+                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        telegramUserId: userData.telegram_user_id,
-                        amount: 75
+                        taskId: 0, // ID для рекламной задачи
+                        rewardAmount: 75, // 75 coins
+                        telegramUserId: userData.telegram_user_id
                     }),
                 });
 
@@ -117,10 +118,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 if (response.ok) {
                     updateUserData(data.userData);
                 } else {
-                    console.error('Error incrementing coins:', data.error);
+                    console.error('Error claiming task reward:', data.error);
                 }
             } catch (error) {
-                console.error('Error calling increment-coins:', error);
+                console.error('Error calling claim-task:', error);
             }
             
             // Устанавливаем кулдаун 5 секунд
@@ -133,16 +134,17 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 try {
                     await window.AdGigaFallback();
                     
-                    // Начисляем 75 coins после успешного просмотра fallback рекламы
+                    // После успешного просмотра fallback рекламы начисляем 75 coins
                     try {
-                        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/increment-coins', {
+                        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                telegramUserId: userData.telegram_user_id,
-                                amount: 75
+                                taskId: 0,
+                                rewardAmount: 75,
+                                telegramUserId: userData.telegram_user_id
                             }),
                         });
 
@@ -151,8 +153,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         if (response.ok) {
                             updateUserData(data.userData);
                         }
-                    } catch (coinError) {
-                        console.error('Error incrementing coins:', coinError);
+                    } catch (claimError) {
+                        console.error('Error claiming task reward:', claimError);
                     }
                     
                     setGigapubCooldown(5);
@@ -172,7 +174,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             return;
         }
 
-        // НЕМЕДЛЕННО обновляем состояние
+        // Для остальных задач НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));

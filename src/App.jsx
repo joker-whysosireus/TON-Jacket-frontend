@@ -10,6 +10,15 @@ import Gifts from './Pages/Gifts/Gifts.jsx';
 
 const AUTH_FUNCTION_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/auth';
 
+if (process.env.NODE_ENV === 'production') { 
+        telegramAnalytics.init({
+        token: 'eyJhcHBfbmFtZSI6InRvbl9tYW5pYSIsImFwcF91cmwiOiJodHRwczovL3QubWUvdG9uX21hbmlhX3Nsb3RzX2JvdCIsImFwcF9kb21haW4iOiJodHRwczovL3Rvbm1hbmlhLnNwYWNlIn0=!TwDUq30bnkX6M5nIFCNK0/kU5WeYh6hOgDWKhXtYB0o=',
+        appName: 'ton_mania', 
+    });
+} else {
+    console.log("Telegram Analytics SDK not initialized in development mode.");
+}
+
 const App = () => {
     const location = useLocation();
     const [isActive, setIsActive] = useState(false);
