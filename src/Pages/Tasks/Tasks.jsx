@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
 import { translations, formatString } from '../../Assets/Lang/translation';
@@ -36,7 +36,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return defaultTasks;
     });
 
-    // Состояния для GigaPub рекламы
+    // Состояния для GigaPub рекламы - как в рабочем примере
     const [gigapubAdAvailable, setGigapubAdAvailable] = useState(false);
     const [isGigapubLoading, setIsGigapubLoading] = useState(false);
     const [gigapubCooldown, setGigapubCooldown] = useState(0);
@@ -48,7 +48,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
-    // Проверка доступности GigaPub
+    // Проверка доступности функции GigaPub - как в рабочем примере
     useEffect(() => {
         const checkGigapubFunction = () => {
             if (window.showGiga && typeof window.showGiga === 'function') {
@@ -117,44 +117,55 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // Функция для обработки GigaPub рекламы
-    const handleGigapubAd = async () => {
+    // Обработка показа рекламы GigaPub - ТОЧНО как в рабочем примере
+    const handleGigapubAd = useCallback(async () => {
         if (!gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0) {
             return;
         }
         
         setIsGigapubLoading(true);
         
+        if (typeof window.showGiga !== 'function') {
+            console.error('GigaPub show function not available');
+            setIsGigapubLoading(false);
+            return;
+        }
+        
         try {
-            // СНАЧАЛА начисляем награду
-            console.log("Начисляем награду за рекламу");
+            // ПОКАЗЫВАЕМ РЕКЛАМУ ПЕРВЫМ ДЕЛОМ - как в рабочем примере
+            await window.showGiga();
+            
+            // ПОСЛЕ успешного показа рекламы начисляем награду
+            console.log("Реклама показана, начисляем награду");
             const rewardSuccess = await claimReward(0, 75);
             
-            if (!rewardSuccess) {
-                throw new Error('Не удалось начислить награду');
+            if (rewardSuccess) {
+                // Помечаем задачу как выполненную
+                const updatedTasks = { ...tasks, task0: true };
+                setTasks(updatedTasks);
+                localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                
+                // Устанавливаем кулдаун
+                setGigapubCooldown(5);
             }
-
-            // ПОТОМ показываем рекламу
-            if (typeof window.showGiga !== 'function') {
-                throw new Error('GigaPub show function not available');
-            }
-            
-            console.log("Показываем рекламу...");
-            await window.showGiga();
-            console.log("Реклама успешно показана");
-            
-            // Устанавливаем кулдаун
-            setGigapubCooldown(5);
             
         } catch (error) {
             console.error('GigaPub ad error:', error);
             
-            // Пробуем fallback
+            // Пробуем fallback - как в рабочем примере
             if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
                 try {
-                    console.log("Пробуем резервную рекламу");
                     await window.AdGigaFallback();
-                    console.log("Резервная реклама показана");
+                    
+                    // Начисляем награду и для fallback
+                    const rewardSuccess = await claimReward(0, 75);
+                    
+                    if (rewardSuccess) {
+                        const updatedTasks = { ...tasks, task0: true };
+                        setTasks(updatedTasks);
+                        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                        setGigapubCooldown(5);
+                    }
                 } catch (fallbackError) {
                     console.error('Fallback ad error:', fallbackError);
                 }
@@ -162,7 +173,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         } finally {
             setIsGigapubLoading(false);
         }
-    };
+    }, [gigapubAdAvailable, isGigapubLoading, gigapubCooldown, tasks, userData.telegram_user_id, updateUserData]);
 
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
         // Для задачи с рекламой (task0) обрабатываем отдельно
