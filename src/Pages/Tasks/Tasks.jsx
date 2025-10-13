@@ -84,6 +84,39 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(interval);
     }, [gigapubCooldown]);
 
+    // Функция для начисления награды
+    const claimReward = async (taskId, rewardAmount) => {
+        try {
+            console.log("Отправляем запрос с параметрами:", { taskId, rewardAmount, telegramUserId: userData.telegram_user_id });
+            
+            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: taskId,
+                    rewardAmount: rewardAmount,
+                    telegramUserId: userData.telegram_user_id
+                }),
+            });
+
+            const data = await response.json();
+            console.log("Ответ от сервера:", data);
+
+            if (response.ok) {
+                updateUserData(data.userData);
+                return true;
+            } else {
+                console.error('Error claiming reward:', data.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error calling claim-task:', error);
+            return false;
+        }
+    };
+
     // Функция для обработки GigaPub рекламы
     const handleGigapubAd = async () => {
         if (!gigapubAdAvailable || isGigapubLoading || gigapubCooldown > 0) {
@@ -93,69 +126,35 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         setIsGigapubLoading(true);
         
         try {
+            // СНАЧАЛА начисляем награду
+            console.log("Начисляем награду за рекламу");
+            const rewardSuccess = await claimReward(0, 75);
+            
+            if (!rewardSuccess) {
+                throw new Error('Не удалось начислить награду');
+            }
+
+            // ПОТОМ показываем рекламу
             if (typeof window.showGiga !== 'function') {
                 throw new Error('GigaPub show function not available');
             }
             
+            console.log("Показываем рекламу...");
             await window.showGiga();
+            console.log("Реклама успешно показана");
             
-            // Начисляем 75 coins после успешного просмотра рекламы
-            try {
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        telegramUserId: userData.telegram_user_id,
-                        amount: 75
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    updateUserData(data.userData);
-                } else {
-                    console.error('Error incrementing coins:', data.error);
-                }
-            } catch (error) {
-                console.error('Error calling increment-coins:', error);
-            }
-            
-            // Устанавливаем кулдаун 5 секунд
+            // Устанавливаем кулдаун
             setGigapubCooldown(5);
             
         } catch (error) {
             console.error('GigaPub ad error:', error);
+            
             // Пробуем fallback
             if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
                 try {
+                    console.log("Пробуем резервную рекламу");
                     await window.AdGigaFallback();
-                    
-                    // Начисляем 75 coins после успешного просмотра fallback рекламы
-                    try {
-                        const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                telegramUserId: userData.telegram_user_id,
-                                amount: 75
-                            }),
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            updateUserData(data.userData);
-                        }
-                    } catch (coinError) {
-                        console.error('Error incrementing coins:', coinError);
-                    }
-                    
-                    setGigapubCooldown(5);
+                    console.log("Резервная реклама показана");
                 } catch (fallbackError) {
                     console.error('Fallback ad error:', fallbackError);
                 }
@@ -172,6 +171,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             return;
         }
 
+        // Для остальных задач обычная логика
+        if (tasks[taskKey]) return;
+
         // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
@@ -182,28 +184,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
         
         try {
-            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    taskId: taskId,
-                    rewardAmount: rewardAmount,
-                    telegramUserId: userData.telegram_user_id
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                updateUserData(data.userData);
-            } else {
-                // Откатываем состояние в случае ошибки
-                const revertedTasks = { ...tasks };
-                setTasks(revertedTasks);
-                localStorage.setItem('tasks', JSON.stringify(revertedTasks));
-            }
+            await claimReward(taskId, rewardAmount);
         } catch (error) {
             // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
