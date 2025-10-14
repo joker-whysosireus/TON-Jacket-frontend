@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
 import { translations, formatString } from '../../Assets/Lang/translation';
 import './Tasks.css';
+
+// Константы для рекламных сетей
+const MONETAG_ZONE_ID = "10036621"; // Ваш zone_id из первого проекта
 
 function Tasks({ userData, updateUserData, language = 'english' }) {
     // Получаем переводы для текущего языка
@@ -36,128 +39,146 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return defaultTasks;
     });
 
-    const [isAdLoading, setIsAdLoading] = useState(false);
+    // Состояния для Monetag рекламы
+    const [monetagAdAvailable, setMonetagAdAvailable] = useState(false);
+    const [isMonetagLoading, setIsMonetagLoading] = useState(false);
+    const [monetagCooldown, setMonetagCooldown] = useState(() => {
+        const stored = localStorage.getItem('monetagCooldown');
+        return stored ? parseInt(stored) : 0;
+    });
+    const [remainingTime, setRemainingTime] = useState(0);
 
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
+
+    // Сохранение cooldown в localStorage
+    useEffect(() => {
+        localStorage.setItem('monetagCooldown', monetagCooldown.toString());
+    }, [monetagCooldown]);
+
+    // Проверка доступности функции Monetag
+    useEffect(() => {
+        const checkMonetagFunction = () => {
+            if (window[`show_${MONETAG_ZONE_ID}`] && typeof window[`show_${MONETAG_ZONE_ID}`] === 'function') {
+                setMonetagAdAvailable(true);
+            } else {
+                setMonetagAdAvailable(false);
+            }
+        };
+        
+        checkMonetagFunction();
+        const intervalId = setInterval(checkMonetagFunction, 1000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // Вычисление оставшегося времени для Monetag
+    useEffect(() => {
+        const calculateRemainingTime = () => {
+            const now = Date.now();
+            const timeLeft = monetagCooldown > now ? Math.floor((monetagCooldown - now) / 1000) : 0;
+            setRemainingTime(timeLeft);
+        };
+
+        calculateRemainingTime();
+        const interval = setInterval(calculateRemainingTime, 1000);
+        return () => clearInterval(interval);
+    }, [monetagCooldown]);
 
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
-    // Функция для показа рекламы Gigapub
-    const showGigapubAd = () => {
-        return new Promise((resolve, reject) => {
-            console.log('Attempting to show Gigapub ad...');
+    // Функция для показа рекламы Monetag
+    const handleMonetagAd = useCallback(async () => {
+        if (!monetagAdAvailable || isMonetagLoading || remainingTime > 0) return;
+        
+        setIsMonetagLoading(true);
+        
+        const showAdFunction = window[`show_${MONETAG_ZONE_ID}`];
+        
+        if (typeof showAdFunction !== 'function') {
+            console.error('Monetag show function not available');
+            setIsMonetagLoading(false);
+            return;
+        }
+        
+        try {
+            await showAdFunction({ 
+                ymid: userData.telegram_user_id || 'anonymous'
+            });
             
-            if (window.Gigapub && typeof window.Gigapub.showAd === 'function') {
-                console.log('Gigapub found, showing ad');
+            // После успешного показа рекламы вызываем функцию для начисления 75 coins
+            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/ads-reward', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    telegram_user_id: userData.telegram_user_id
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Обновляем userData
+                updateUserData(result.userData);
                 
-                window.Gigapub.showAd({
-                    onClose: function() {
-                        console.log('Gigapub ad closed successfully');
-                        resolve(true);
-                    },
-                    onError: function(error) {
-                        console.error('Gigapub ad error:', error);
-                        reject(new Error(`Ad failed: ${error}`));
-                    },
-                    onLoad: function() {
-                        console.log('Gigapub ad loaded');
-                    }
-                });
+                // Устанавливаем кулдаун 3 секунды
+                const cooldownEnd = Date.now() + 3000;
+                setMonetagCooldown(cooldownEnd);
+                
+                alert('+75 coins received for watching the ad!');
             } else {
-                console.warn('Gigapub not available, simulating ad');
-                // Имитация рекламы для разработки
-                setTimeout(() => {
-                    console.log('Simulated ad completed');
-                    resolve(true);
-                }, 3000);
+                alert('Error claiming reward: ' + (result.error || 'Unknown error'));
             }
-        });
-    };
+            
+        } catch (error) {
+            console.error('Monetag ad error:', error);
+            alert('Error showing ad');
+        } finally {
+            setIsMonetagLoading(false);
+        }
+    }, [monetagAdAvailable, isMonetagLoading, remainingTime, userData, updateUserData]);
 
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
-        // Для задачи с рекламой (task0) обрабатываем отдельно
-        if (taskKey === 'task0') {
-            setIsAdLoading(true);
-            
-            try {
-                console.log('Starting ad process for task0');
-                
-                // Показываем рекламу перед выполнением задачи
-                await showGigapubAd();
-                
-                console.log('Ad completed, claiming reward');
-                
-                // После завершения рекламы выполняем запрос к серверу
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        taskId: taskId,
-                        rewardAmount: rewardAmount,
-                        telegramUserId: userData.telegram_user_id
-                    }),
-                });
+        // НЕМЕДЛЕННО обновляем состояние
+        const updatedTasks = { ...tasks, [taskKey]: true };
+        setTasks(updatedTasks);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
 
-                const data = await response.json();
+        if (channel) {
+            window.open(channel, '_blank');
+        }
+        
+        try {
+            const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: taskId,
+                    rewardAmount: rewardAmount,
+                    telegramUserId: userData.telegram_user_id
+                }),
+            });
 
-                if (response.ok) {
-                    updateUserData(data.userData);
-                    console.log('Reward claimed successfully after ad view');
-                    // Можно показать уведомление об успехе
-                } else {
-                    console.error('Failed to claim reward:', data.error);
-                    // Можно показать уведомление об ошибке
-                }
-            } catch (error) {
-                console.error('Error during ad viewing or reward claim:', error);
-                // Можно показать уведомление об ошибке
-            } finally {
-                setIsAdLoading(false);
-            }
-        } else {
-            // Оригинальная логика для других задач
-            const updatedTasks = { ...tasks, [taskKey]: true };
-            setTasks(updatedTasks);
-            localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+            const data = await response.json();
 
-            if (channel) {
-                window.open(channel, '_blank');
-            }
-            
-            try {
-                const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        taskId: taskId,
-                        rewardAmount: rewardAmount,
-                        telegramUserId: userData.telegram_user_id
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    updateUserData(data.userData);
-                } else {
-                    // Откатываем состояние в случае ошибки
-                    const revertedTasks = { ...tasks };
-                    setTasks(revertedTasks);
-                    localStorage.setItem('tasks', JSON.stringify(revertedTasks));
-                }
-            } catch (error) {
+            if (response.ok) {
+                updateUserData(data.userData);
+            } else {
                 // Откатываем состояние в случае ошибки
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
                 localStorage.setItem('tasks', JSON.stringify(revertedTasks));
             }
+        } catch (error) {
+            // Откатываем состояние в случае ошибки
+            const revertedTasks = { ...tasks };
+            setTasks(revertedTasks);
+            localStorage.setItem('tasks', JSON.stringify(revertedTasks));
         }
     };
 
@@ -170,12 +191,16 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     };
 
     const getButtonText = (task, taskKey) => {
-        // Для задачи с рекламой всегда показываем кнопку "Watch"
-        if (taskKey === 'task0') {
-            if (isAdLoading) {
+        if (task.type === 'ad') {
+            if (!monetagAdAvailable) {
+                return t.unavailable || 'Unavailable';
+            } else if (remainingTime > 0) {
+                return `${remainingTime}s`;
+            } else if (isMonetagLoading) {
                 return t.loading || 'Loading...';
+            } else {
+                return t.watch || 'Watch';
             }
-            return task.buttonText;
         }
         
         if (tasks[taskKey]) {
@@ -207,14 +232,28 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
+    // Обработчик клика по кнопке задачи
+    const handleTaskClick = (task, taskKey) => {
+        if (task.type === 'ad') {
+            handleMonetagAd();
+        } else {
+            handleTaskCompletion(
+                task.id, 
+                task.rewardAmount, 
+                task.taskKey, 
+                task.type === 'subscribe' ? TELEGRAM_CHANNEL : null
+            );
+        }
+    };
+
     // Обновленный taskList с использованием переводов
     const taskList = [
         {
             id: 0,
             type: 'ad',
             title: t.tasks && t.tasks[0] ? t.tasks[0].title : 'Watch a short video',
-            reward: '+500 ' + (balanceT.coins || 'coins'),
-            rewardAmount: 500,
+            reward: '+75 ' + (balanceT.coins || 'coins'),
+            rewardAmount: 75,
             requiredAmount: 1,
             currentProgress: 0,
             buttonText: t.watch || 'Watch',
@@ -328,14 +367,15 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
                         const taskIcon = getTaskIcon(task);
-                        // Для задачи с рекламой всегда считаем невыполненной, чтобы кнопка была доступна
-                        const isCompleted = task.taskKey === 'task0' ? false : tasks[task.taskKey];
+                        const isCompleted = task.type !== 'ad' && tasks[task.taskKey]; // Для ad задачи не используем completed состояние
                         const isAvailable = isTaskAvailable(task);
+                        
+                        // Для ad задачи определяем доступность по-другому
+                        const isAdDisabled = task.type === 'ad' && 
+                                           (!monetagAdAvailable || isMonetagLoading || remainingTime > 0);
+                        
                         const buttonText = getButtonText(task, task.taskKey);
-                        // Для task0 кнопка отключается только во время загрузки рекламы (isAdLoading)
-                        const isDisabled = task.taskKey === 'task0' 
-                            ? isAdLoading 
-                            : isCompleted || !isAvailable;
+                        const isDisabled = (task.type === 'ad' ? isAdDisabled : (isCompleted || !isAvailable));
 
                         return (
                             <div 
@@ -349,15 +389,11 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                                 </div>
                                 <button 
                                     className={`task-action-btn ${
-                                        isCompleted ? 'claimed' : 
-                                        isAvailable ? 'active' : 'incomplete'
-                                    } ${isAdLoading ? 'loading' : ''}`}
-                                    onClick={() => handleTaskCompletion(
-                                        task.id, 
-                                        task.rewardAmount, 
-                                        task.taskKey, 
-                                        task.type === 'subscribe' ? TELEGRAM_CHANNEL : null
-                                    )} 
+                                        task.type === 'ad' ? 
+                                            (isAdDisabled ? 'incomplete' : 'active') :
+                                        (isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete')
+                                    }`}
+                                    onClick={() => handleTaskClick(task, task.taskKey)}
                                     disabled={isDisabled}
                                 >
                                     {buttonText}
