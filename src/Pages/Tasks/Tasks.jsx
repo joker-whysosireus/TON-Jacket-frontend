@@ -37,33 +37,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     });
 
     const [isAdLoading, setIsAdLoading] = useState(false);
-    const [isAdScriptLoaded, setIsAdScriptLoaded] = useState(false);
 
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
-
-    // Проверяем загрузку скрипта рекламы
-    useEffect(() => {
-        const checkAdScript = () => {
-            if (window.Gigapub) {
-                setIsAdScriptLoaded(true);
-                return true;
-            }
-            return false;
-        };
-
-        // Первоначальная проверка
-        if (!checkAdScript()) {
-            // Если скрипт еще не загружен, проверяем периодически
-            const interval = setInterval(() => {
-                if (checkAdScript()) {
-                    clearInterval(interval);
-                }
-            }, 500);
-
-            return () => clearInterval(interval);
-        }
-    }, []);
 
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -356,9 +332,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isCompleted = task.taskKey === 'task0' ? false : tasks[task.taskKey];
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
-                        // Для task0 кнопка отключается только во время загрузки рекламы
+                        // Для task0 кнопка отключается только во время загрузки рекламы (isAdLoading)
                         const isDisabled = task.taskKey === 'task0' 
-                            ? isAdLoading || !isAdScriptLoaded
+                            ? isAdLoading 
                             : isCompleted || !isAvailable;
 
                         return (
