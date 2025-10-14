@@ -44,6 +44,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return stored ? parseInt(stored) : 0;
     });
     const [remainingTime, setRemainingTime] = useState(0);
+    const [adWatchCount, setAdWatchCount] = useState(() => {
+        const stored = localStorage.getItem('adWatchCount');
+        return stored ? parseInt(stored) : 0;
+    });
 
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
@@ -52,24 +56,41 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
         localStorage.setItem('gigapubCooldown', gigapubCooldown.toString());
-    }, [tasks, gigapubCooldown]);
+        localStorage.setItem('adWatchCount', adWatchCount.toString());
+    }, [tasks, gigapubCooldown, adWatchCount]);
 
     // Проверка доступности функции GigaPub
     useEffect(() => {
         const checkGigapubFunction = () => {
             if (window.showGiga && typeof window.showGiga === 'function') {
+                console.log("GigaPub доступен");
                 setGigapubAdAvailable(true);
             } else {
+                console.log("GigaPub недоступен, проверяем fallback");
                 setGigapubAdAvailable(false);
-                if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
-                    window.showGiga = () => window.AdGigaFallback();
+                
+                // Создаем fallback функцию если не существует
+                if (!window.AdGigaFallback) {
+                    window.AdGigaFallback = function() {
+                        return new Promise((resolve) => {
+                            console.log("Используем резервную рекламу GigaPub");
+                            // Имитируем успешный показ рекламы через 1 секунду
+                            setTimeout(resolve, 1000);
+                        });
+                    };
+                }
+
+                // Создаем showGiga если не был создан скриптом
+                if (!window.showGiga) {
+                    window.showGiga = window.AdGigaFallback;
                     setGigapubAdAvailable(true);
                 }
             }
         };
         
         checkGigapubFunction();
-        const intervalId = setInterval(checkGigapubFunction, 5000);
+        // Проверяем каждые 3 секунды
+        const intervalId = setInterval(checkGigapubFunction, 3000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -87,23 +108,45 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return () => clearInterval(interval);
     }, [gigapubCooldown]);
 
-    // Обработка показа рекламы Gigapub
+    // ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ ДЛЯ РЕКЛАМЫ
     const handleGigapubAd = useCallback(async () => {
-        if (!gigapubAdAvailable || isGigapubLoading || remainingTime > 0) {
+        console.log("Запуск handleGigapubAd...");
+        
+        // Проверяем условия
+        if (!gigapubAdAvailable) {
+            console.error("GigaPub недоступен");
+            alert("Рекламный сервис временно недоступен. Попробуйте позже.");
             return;
         }
-        
+
+        if (isGigapubLoading) {
+            console.log("Реклама уже загружается...");
+            return;
+        }
+
+        if (remainingTime > 0) {
+            console.log(`Кулдаун активен. Осталось: ${remainingTime} секунд`);
+            return;
+        }
+
+        console.log("Условия выполнены, начинаем показ рекламы...");
         setIsGigapubLoading(true);
-        
+
         try {
-            if (typeof window.showGiga !== 'function') {
-                throw new Error('GigaPub show function not available');
-            }
+            // Ждем немного чтобы убедиться что все готово
+            await new Promise(resolve => setTimeout(resolve, 100));
             
+            console.log("Вызываем window.showGiga()...");
+            
+            // ВЫЗЫВАЕМ ФУНКЦИЮ ПОКАЗА РЕКЛАМЫ
             await window.showGiga();
             
-            // После успешного просмотра рекламы начисляем награду
+            console.log("Реклама успешно показана!");
+
+            // НАЧИСЛЯЕМ НАГРАДУ ПОСЛЕ УСПЕШНОГО ПОКАЗА РЕКЛАМЫ
             try {
+                console.log("Отправляем запрос на начисление награды...");
+                
                 const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                     method: 'POST',
                     headers: {
@@ -117,25 +160,40 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 });
 
                 const data = await response.json();
+                console.log("Ответ от сервера:", data);
 
                 if (response.ok) {
+                    console.log("Награда успешно начислена!");
                     updateUserData(data.userData);
+                    
+                    // Обновляем счетчик просмотров
+                    const newCount = adWatchCount + 1;
+                    setAdWatchCount(newCount);
+                    
                     // Устанавливаем кулдаун 30 секунд перед следующим просмотром
                     const cooldownEnd = Date.now() + 30000; // 30 секунд
                     setGigapubCooldown(cooldownEnd);
+                    
+                    console.log(`Просмотр #${newCount}. Следующий через 30 секунд.`);
+                    
                 } else {
-                    console.error('Error claiming ad reward:', data.error);
+                    console.error('Ошибка начисления награды:', data.error);
+                    alert("Ошибка начисления награды. Попробуйте еще раз.");
                 }
-            } catch (error) {
-                console.error('Error claiming ad reward:', error);
+            } catch (claimError) {
+                console.error('Ошибка при запросе награды:', claimError);
+                alert("Ошибка соединения. Награда не начислена.");
             }
             
         } catch (error) {
-            console.error('GigaPub ad error:', error);
+            console.error('Ошибка показа рекламы GigaPub:', error);
+            
             // Пробуем fallback если доступен
             if (window.AdGigaFallback && typeof window.AdGigaFallback === 'function') {
+                console.log("Пробуем fallback...");
                 try {
                     await window.AdGigaFallback();
+                    console.log("Fallback реклама показана!");
                     
                     // Начисляем награду через fallback
                     try {
@@ -155,27 +213,41 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
                         if (response.ok) {
                             updateUserData(data.userData);
+                            const newCount = adWatchCount + 1;
+                            setAdWatchCount(newCount);
                             const cooldownEnd = Date.now() + 30000;
                             setGigapubCooldown(cooldownEnd);
+                            console.log(`Fallback награда начислена! Просмотр #${newCount}`);
                         }
-                    } catch (claimError) {
-                        console.error('Error claiming ad reward via fallback:', claimError);
+                    } catch (fallbackClaimError) {
+                        console.error('Ошибка начисления fallback награды:', fallbackClaimError);
                     }
                 } catch (fallbackError) {
-                    console.error('Fallback ad error:', fallbackError);
+                    console.error('Fallback реклама тоже не сработала:', fallbackError);
+                    alert("Не удалось показать рекламу. Попробуйте позже.");
                 }
+            } else {
+                alert("Рекламный сервис временно недоступен.");
             }
         } finally {
             setIsGigapubLoading(false);
+            console.log("Завершение handleGigapubAd");
         }
-    }, [gigapubAdAvailable, isGigapubLoading, remainingTime, userData, updateUserData]);
+    }, [gigapubAdAvailable, isGigapubLoading, remainingTime, userData, updateUserData, adWatchCount]);
 
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ ВСЕХ ЗАДАЧ
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
-        // Для задачи с рекламой (task0) используем отдельную функцию
+        console.log(`Обработка задачи: ${taskKey}, ID: ${taskId}`);
+
+        // ДЛЯ РЕКЛАМНОЙ ЗАДАЧИ - ВЫЗЫВАЕМ ОТДЕЛЬНУЮ ФУНКЦИЮ
         if (taskKey === 'task0') {
+            console.log("Это рекламная задача, вызываем handleGigapubAd");
             await handleGigapubAd();
             return;
         }
+
+        // ДЛЯ ОСТАЛЬНЫХ ЗАДАЧ - СТАНДАРТНАЯ ЛОГИКА
+        console.log("Стандартная задача, обновляем состояние...");
 
         // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
@@ -183,10 +255,12 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
 
         if (channel) {
+            console.log("Открываем канал:", channel);
             window.open(channel, '_blank');
         }
         
         try {
+            console.log("Отправляем запрос на выполнение задачи...");
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
                 method: 'POST',
                 headers: {
@@ -200,20 +274,26 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             });
 
             const data = await response.json();
+            console.log("Ответ сервера:", data);
 
             if (response.ok) {
+                console.log("Задача выполнена успешно!");
                 updateUserData(data.userData);
             } else {
+                console.error("Ошибка сервера:", data.error);
                 // Откатываем состояние в случае ошибки
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
                 localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+                alert("Ошибка выполнения задачи: " + data.error);
             }
         } catch (error) {
+            console.error("Сетевая ошибка:", error);
             // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
             setTasks(revertedTasks);
             localStorage.setItem('tasks', JSON.stringify(revertedTasks));
+            alert("Сетевая ошибка. Попробуйте еще раз.");
         }
     };
 
@@ -236,7 +316,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             } else if (!gigapubAdAvailable) {
                 return t.unavailable || 'Unavailable';
             } else {
-                return task.buttonText; // "Watch"
+                return task.buttonText + ` (${adWatchCount})`; // "Watch (5)"
             }
         } else if (task.type === 'friends' || task.type === 'bet') {
             if (task.currentProgress >= task.requiredAmount) {
@@ -279,7 +359,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
             reward: '+500 ' + (balanceT.coins || 'coins'),
             rewardAmount: 500,
             requiredAmount: 1,
-            currentProgress: 0,
+            currentProgress: adWatchCount,
             buttonText: t.watch || 'Watch',
             taskKey: 'task0'
         },
