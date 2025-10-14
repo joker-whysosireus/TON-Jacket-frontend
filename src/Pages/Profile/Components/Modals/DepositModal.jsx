@@ -11,6 +11,10 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
     const t = translations[language]?.profileModals?.deposit || translations.english.profileModals.deposit;
     const balanceT = translations[language]?.balance || translations.english.balance;
 
+    // Акция 1.5x (можно сделать динамической по дате)
+    const isBonusActive = true; // Можно заменить на проверку даты: new Date() < new Date('2024-12-31')
+    const bonusMultiplier = 1.5;
+
     const TonLogoIcon = ({ size = 20, className = "" }) => {
         return (
             <img 
@@ -34,6 +38,20 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
     };
 
     const isValidDeposit = depositAmount && parseFloat(depositAmount) > 0;
+    
+    // Рассчитываем сумму с бонусом
+    const calculateBonusAmount = () => {
+        if (!depositAmount) return 0;
+        const amount = parseFloat(depositAmount);
+        return amount * bonusMultiplier;
+    };
+
+    const getBonusText = () => {
+        if (!isBonusActive) return null;
+        return formatString(t.bonusText || "Get {total} TON with 1.5x bonus!", { 
+            total: calculateBonusAmount().toFixed(1)
+        });
+    };
 
     if (!show) return null;
 
@@ -46,10 +64,36 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                 </div>
                 
                 <div className="convert-modal-body">
+                    {/* Баннер акции */}
+                    {isBonusActive && (
+                        <div className="deposit-bonus-banner">
+                            <div className="bonus-icon">🎁</div>
+                            <div className="bonus-text">
+                                <div className="bonus-title">SPECIAL OFFER!</div>
+                                <div className="bonus-subtitle">1.5x Deposit Bonus - 2 weeks only!</div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="deposit-amount-display">
                         <TonLogoIcon size={32} />
-                        <span className="deposit-amount-text">{depositAmount || '0'} {balanceT.ton}</span>
+                        <div className="deposit-amount-info">
+                            <span className="deposit-amount-text">{depositAmount || '0'} {balanceT.ton}</span>
+                            {depositAmount && isBonusActive && (
+                                <span className="deposit-bonus-amount">
+                                    + {(parseFloat(depositAmount) * 0.5).toFixed(1)} {balanceT.ton} bonus
+                                </span>
+                            )}
+                        </div>
                     </div>
+
+                    {depositAmount && isBonusActive && (
+                        <div className="deposit-total-receive">
+                            <span className="total-receive-text">
+                                You will receive: <strong>{calculateBonusAmount().toFixed(1)} {balanceT.ton}</strong>
+                            </span>
+                        </div>
+                    )}
 
                     <div className="deposit-info">
                         <p>{t.selectAmount}</p>
@@ -60,11 +104,16 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                             {fixedAmounts.map((amount) => (
                                 <button
                                     key={amount}
-                                    className={`choice-btn ${depositAmount === amount.toString() ? 'active' : ''} ${isDepositing ? 'disabled' : ''}`}
+                                    className={`choice-btn bonus-choice-btn ${depositAmount === amount.toString() ? 'active' : ''} ${isDepositing ? 'disabled' : ''}`}
                                     onClick={() => handleFixedAmountClick(amount)}
                                     disabled={isDepositing}
                                 >
-                                    {amount} {balanceT.ton}
+                                    <div className="choice-btn-content">
+                                        <span className="choice-amount">{amount} {balanceT.ton}</span>
+                                        {isBonusActive && (
+                                            <span className="choice-bonus">+{(amount * 0.5).toFixed(0)}</span>
+                                        )}
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -73,7 +122,7 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                     <button
                         onClick={() => onDeposit(depositAmount)}
                         disabled={!isValidDeposit || isDepositing}
-                        className={`deposit-action-button ${!isValidDeposit || isDepositing ? 'disabled' : ''}`}
+                        className={`deposit-action-button ${!isValidDeposit || isDepositing ? 'disabled' : ''} ${isBonusActive ? 'bonus-button' : ''}`}
                     >
                         {isDepositing ? (
                             depositSuccess ? (
@@ -85,9 +134,24 @@ function DepositModal({ show, onClose, userData, onDeposit, isDepositing, deposi
                                 </>
                             )
                         ) : (
-                            formatString(t.depositButton, { amount: depositAmount })
+                            <div className="deposit-button-content">
+                                <span>{formatString(t.depositButton, { amount: depositAmount })}</span>
+                                {isBonusActive && depositAmount && (
+                                    <span className="deposit-bonus-badge">+50% BONUS</span>
+                                )}
+                            </div>
                         )}
                     </button>
+
+                    {/* Уведомление об акции */}
+                    {isBonusActive && (
+                        <div className="deposit-promo-notice">
+                            <div className="promo-icon">⏰</div>
+                            <div className="promo-text">
+                                <strong>Limited Time:</strong> Get 1.5x on all deposits! Offer ends in 2 weeks.
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

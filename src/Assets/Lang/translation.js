@@ -32,7 +32,14 @@ export const translations = {
         selectAmount: "Select amount to deposit",
         depositButton: "Deposit {amount} TON",
         success: "Success!",
-        depositing: "Depositing..."
+        depositing: "Depositing...",
+        bonusText: "Get {total} TON with 1.5x bonus!",
+        bonusTitle: "SPECIAL OFFER!",
+        bonusSubtitle: "1.5x Deposit Bonus - 2 weeks only!",
+        bonusBadge: "+50% BONUS",
+        promoNotice: "Limited Time: Get 1.5x on all deposits! Offer ends in 2 weeks.",
+        youWillReceive: "You will receive",
+        bonusAmount: "+{amount} TON bonus"
       },
       withdraw: {
         title: "💰 Withdraw TON",
@@ -77,6 +84,8 @@ export const translations = {
       subscribe: "Subscribe", 
       get: "Get",
       done: "Done!",
+      unavailable: "Unavailable",
+      loading: "Loading...",
       tasks: [
         { title: "Watch a short video" },
         { title: "Subscribe to our channel" },
@@ -197,7 +206,14 @@ export const translations = {
         selectAmount: "Выберите сумму для пополнения",
         depositButton: "Пополнить {amount} TON",
         success: "Успех!",
-        depositing: "Пополнение..."
+        depositing: "Пополнение...",
+        bonusText: "Получите {total} TON с бонусом 1.5x!",
+        bonusTitle: "СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ!",
+        bonusSubtitle: "Бонус 1.5x на пополнение - только 2 недели!",
+        bonusBadge: "+50% БОНУС",
+        promoNotice: "Ограниченное время: Получайте 1.5x на все пополнения! Предложение действует 2 недели.",
+        youWillReceive: "Вы получите",
+        bonusAmount: "+{amount} TON бонус"
       },
       withdraw: {
         title: "💰 Вывести TON",
@@ -242,6 +258,8 @@ export const translations = {
       subscribe: "Подписаться",
       get: "Получить", 
       done: "Готово!",
+      unavailable: "Недоступно",
+      loading: "Загрузка...",
       tasks: [
         { title: "Посмотрите короткое видео" },
         { title: "Подпишитесь на наш канал" },
