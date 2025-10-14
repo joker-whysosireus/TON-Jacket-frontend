@@ -7,8 +7,19 @@ import Tasks from './Pages/Tasks/Tasks.jsx';
 import Loader from './Assets/Loader/Loader.jsx';
 import Profile from './Pages/Profile/Profile.jsx';
 import Gifts from './Pages/Gifts/Gifts.jsx';
+import telegramAnalytics from '@telegram-apps/analytics'; 
 
 const AUTH_FUNCTION_URL = 'https://ton-jacket-backend.netlify.app/.netlify/functions/auth';
+
+// Initialize Telegram Analytics
+if (process.env.NODE_ENV === 'production') { 
+    telegramAnalytics.init({
+        token: 'eyJhcHBfbmFtZSI6InRvbl9tYW5pYSIsImFwcF91cmwiOiJodHRwczovL3QubWUvdG9uX21hbmlhX3Nsb3RzX2JvdCIsImFwcF9kb21haW4iOiJodHRwczovL3Rvbm1hbmlhLnNwYWNlIn0=!TwDUq30bnkX6M5nIFCNK0/kU5WeYh6hOgDWKhXtYB0o=',
+        appName: 'ton_mania', 
+    });
+} else {
+    console.log("Telegram Analytics SDK not initialized in development mode.");
+}
 
 const App = () => {
     const location = useLocation();
