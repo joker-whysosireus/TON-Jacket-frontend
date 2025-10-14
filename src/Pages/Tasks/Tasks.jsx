@@ -36,8 +36,34 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         return defaultTasks;
     });
 
+    const [isAdLoading, setIsAdLoading] = useState(false);
+    const [isAdScriptLoaded, setIsAdScriptLoaded] = useState(false);
+
     // Ссылки для задач
     const TELEGRAM_CHANNEL = "https://t.me/ton_mania_channel";
+
+    // Проверяем загрузку скрипта рекламы
+    useEffect(() => {
+        const checkAdScript = () => {
+            if (window.Gigapub) {
+                setIsAdScriptLoaded(true);
+                return true;
+            }
+            return false;
+        };
+
+        // Первоначальная проверка
+        if (!checkAdScript()) {
+            // Если скрипт еще не загружен, проверяем периодически
+            const interval = setInterval(() => {
+                if (checkAdScript()) {
+                    clearInterval(interval);
+                }
+            }, 500);
+
+            return () => clearInterval(interval);
+        }
+    }, []);
 
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -46,21 +72,31 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     // Функция для показа рекламы Gigapub
     const showGigapubAd = () => {
         return new Promise((resolve, reject) => {
-            if (window.Gigapub) {
-                // Инициализация рекламы Gigapub
+            console.log('Attempting to show Gigapub ad...');
+            
+            if (window.Gigapub && typeof window.Gigapub.showAd === 'function') {
+                console.log('Gigapub found, showing ad');
+                
                 window.Gigapub.showAd({
                     onClose: function() {
-                        resolve(true); // Реклама завершена
+                        console.log('Gigapub ad closed successfully');
+                        resolve(true);
                     },
                     onError: function(error) {
                         console.error('Gigapub ad error:', error);
-                        reject(error);
+                        reject(new Error(`Ad failed: ${error}`));
+                    },
+                    onLoad: function() {
+                        console.log('Gigapub ad loaded');
                     }
                 });
             } else {
-                // Если Gigapub не загружен, имитируем успешное завершение для разработки
-                console.warn('Gigapub not found, simulating ad completion');
-                setTimeout(() => resolve(true), 2000);
+                console.warn('Gigapub not available, simulating ad');
+                // Имитация рекламы для разработки
+                setTimeout(() => {
+                    console.log('Simulated ad completed');
+                    resolve(true);
+                }, 3000);
             }
         });
     };
@@ -68,9 +104,15 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     const handleTaskCompletion = async (taskId, rewardAmount, taskKey, channel = null) => {
         // Для задачи с рекламой (task0) обрабатываем отдельно
         if (taskKey === 'task0') {
+            setIsAdLoading(true);
+            
             try {
+                console.log('Starting ad process for task0');
+                
                 // Показываем рекламу перед выполнением задачи
                 await showGigapubAd();
+                
+                console.log('Ad completed, claiming reward');
                 
                 // После завершения рекламы выполняем запрос к серверу
                 const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/claim-task', {
@@ -89,13 +131,17 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
                 if (response.ok) {
                     updateUserData(data.userData);
-                    // НЕ устанавливаем task0 в true, чтобы кнопка оставалась доступной
                     console.log('Reward claimed successfully after ad view');
+                    // Можно показать уведомление об успехе
                 } else {
                     console.error('Failed to claim reward:', data.error);
+                    // Можно показать уведомление об ошибке
                 }
             } catch (error) {
                 console.error('Error during ad viewing or reward claim:', error);
+                // Можно показать уведомление об ошибке
+            } finally {
+                setIsAdLoading(false);
             }
         } else {
             // Оригинальная логика для других задач
@@ -150,6 +196,9 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     const getButtonText = (task, taskKey) => {
         // Для задачи с рекламой всегда показываем кнопку "Watch"
         if (taskKey === 'task0') {
+            if (isAdLoading) {
+                return t.loading || 'Loading...';
+            }
             return task.buttonText;
         }
         
@@ -307,7 +356,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                         const isCompleted = task.taskKey === 'task0' ? false : tasks[task.taskKey];
                         const isAvailable = isTaskAvailable(task);
                         const buttonText = getButtonText(task, task.taskKey);
-                        const isDisabled = isCompleted || !isAvailable;
+                        // Для task0 кнопка отключается только во время загрузки рекламы
+                        const isDisabled = task.taskKey === 'task0' 
+                            ? isAdLoading || !isAdScriptLoaded
+                            : isCompleted || !isAvailable;
 
                         return (
                             <div 
@@ -320,7 +372,10 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                                     <span className="task-reward">{task.reward}</span>
                                 </div>
                                 <button 
-                                    className={`task-action-btn ${isCompleted ? 'claimed' : isAvailable ? 'active' : 'incomplete'}`}
+                                    className={`task-action-btn ${
+                                        isCompleted ? 'claimed' : 
+                                        isAvailable ? 'active' : 'incomplete'
+                                    } ${isAdLoading ? 'loading' : ''}`}
                                     onClick={() => handleTaskCompletion(
                                         task.id, 
                                         task.rewardAmount, 
