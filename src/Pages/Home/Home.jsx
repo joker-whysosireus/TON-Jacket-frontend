@@ -8,21 +8,21 @@ import InstructionsModal from './Components/Modals/InstructionsModal';
 import { translations, formatString } from '../../Assets/Lang/translation';
 import './Home.css';
 
-// ОБНОВЛЕННЫЕ КОНСТАНТЫ С УМЕНЬШЕННЫМИ ШАНСАМИ ВЫИГРЫША
+// ОБНОВЛЕННЫЕ КОНСТАНТЫ С УВЕЛИЧЕННЫМИ ШАНСАМИ ВЫИГРЫША
 const SYMBOLS_CONFIG = [
-  { id: 1, symbol: '🍒', name: 'Cherry', weight: 60, type: 'fruit' },
-  { id: 2, symbol: '🍋', name: 'Lemon', weight: 55, type: 'fruit' },
-  { id: 3, symbol: '🍊', name: 'Orange', weight: 50, type: 'fruit' },
-  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 45, type: 'fruit' },
-  { id: 5, symbol: '🔔', name: 'Bell', weight: 25, type: 'bell' },
-  { id: 6, symbol: '⭐', name: 'Star', weight: 20, type: 'star' },
-  { id: 7, symbol: '🍇', name: 'Grapes', weight: 35, type: 'fruit' },
-  { id: 8, symbol: '🔶', name: 'Diamond', weight: 10, type: 'diamond' },
-  { id: 9, symbol: '⑦', name: 'Seven', weight: 6, type: 'seven' },
-  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 3, type: 'premium' },
-  { id: 11, symbol: '👑', name: 'Crown', weight: 2, type: 'premium' },
-  { id: 12, symbol: '💀', name: 'Skull', weight: 20, type: 'skull' },
-  { id: 13, symbol: '🔥', name: 'Fire', weight: 2, type: 'special' }
+  { id: 1, symbol: '🍒', name: 'Cherry', weight: 70, type: 'fruit' },
+  { id: 2, symbol: '🍋', name: 'Lemon', weight: 65, type: 'fruit' },
+  { id: 3, symbol: '🍊', name: 'Orange', weight: 60, type: 'fruit' },
+  { id: 4, symbol: '🍉', name: 'Watermelon', weight: 55, type: 'fruit' },
+  { id: 5, symbol: '🔔', name: 'Bell', weight: 40, type: 'bell' },
+  { id: 6, symbol: '⭐', name: 'Star', weight: 35, type: 'star' },
+  { id: 7, symbol: '🍇', name: 'Grapes', weight: 50, type: 'fruit' },
+  { id: 8, symbol: '🔶', name: 'Diamond', weight: 25, type: 'diamond' },
+  { id: 9, symbol: '⑦', name: 'Seven', weight: 15, type: 'seven' },
+  { id: 10, symbol: '💎', name: 'Premium Diamond', weight: 8, type: 'premium' },
+  { id: 11, symbol: '👑', name: 'Crown', weight: 6, type: 'premium' },
+  { id: 12, symbol: '💀', name: 'Skull', weight: 10, type: 'skull' },
+  { id: 13, symbol: '🔥', name: 'Fire', weight: 5, type: 'special' }
 ];
 
 const getWinForCombination = (symbols) => {
@@ -30,7 +30,7 @@ const getWinForCombination = (symbols) => {
   
   console.log('🎰 Проверка выигрыша для комбинации:', symbols.join(' '));
   
-  // 1. ТРОЙНЫЕ КОМБИНАЦИИ (уменьшены шансы)
+  // 1. ТРОЙНЫЕ КОМБИНАЦИИ (увеличены шансы)
   if (a === b && b === c) {
     const tripleWins = {
       '🍒': { multiplier: 2, name: 'TRIPLE CHERRY' },
@@ -50,13 +50,16 @@ const getWinForCombination = (symbols) => {
     return tripleWins[a] || null;
   }
   
-  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ
+  // 2. СПЕЦИАЛЬНЫЕ КОМБИНАЦИИ (добавлены новые комбинации)
   if (a === '💎' && b === '💎' && c === '⭐') return { multiplier: 5, name: 'DIAMOND STAR' };
   if (a === '👑' && b === '👑' && c === '⭐') return { multiplier: 4, name: 'CROWN STAR' };
   if (a === '⑦' && b === '⑦' && c === '⭐') return { multiplier: 3, name: 'SEVEN STAR' };
   if (a === '🔔' && b === '🔔' && c === '⭐') return { multiplier: 2.5, name: 'BELL STAR' };
+  if (a === '🍉' && b === '🍉' && c === '⭐') return { multiplier: 2, name: 'WATERMELON STAR' };
+  if (a === '🍇' && b === '🍇' && c === '⭐') return { multiplier: 2, name: 'GRAPES STAR' };
+  if (a === '🔶' && b === '🔶' && c === '⭐') return { multiplier: 3, name: 'DIAMOND STAR' };
   
-  // 3. ДВОЙНЫЕ КОМБИНАЦИИ
+  // 3. ДВОЙНЫЕ КОМБИНАЦИИ (расширены условия)
   if (a === b || a === c || b === c) {
     let doubleSymbol;
     if (a === b) doubleSymbol = a;
@@ -69,34 +72,43 @@ const getWinForCombination = (symbols) => {
     }
     
     const doubleWins = {
-      '🍉': { multiplier: 0.5, name: 'DOUBLE WATERMELON' },
-      '🔔': { multiplier: 1, name: 'DOUBLE BELL' },
-      '⭐': { multiplier: 0.5, name: 'DOUBLE STAR' },
-      '🍇': { multiplier: 0.5, name: 'DOUBLE GRAPES' },
-      '🔶': { multiplier: 1, name: 'DOUBLE DIAMOND' },
-      '⑦': { multiplier: 1.5, name: 'DOUBLE SEVEN' },
-      '💎': { multiplier: 2, name: 'DOUBLE PREMIUM DIAMOND' },
-      '👑': { multiplier: 1.5, name: 'DOUBLE CROWN' },
+      '🍉': { multiplier: 0.8, name: 'DOUBLE WATERMELON' },
+      '🔔': { multiplier: 1.2, name: 'DOUBLE BELL' },
+      '⭐': { multiplier: 0.8, name: 'DOUBLE STAR' },
+      '🍇': { multiplier: 0.8, name: 'DOUBLE GRAPES' },
+      '🔶': { multiplier: 1.5, name: 'DOUBLE DIAMOND' },
+      '⑦': { multiplier: 2, name: 'DOUBLE SEVEN' },
+      '💎': { multiplier: 3, name: 'DOUBLE PREMIUM DIAMOND' },
+      '👑': { multiplier: 2, name: 'DOUBLE CROWN' },
       '💀': { multiplier: 0, name: 'DOUBLE SKULL' },
-      '🔥': { multiplier: 1, name: 'DOUBLE FIRE' }
+      '🔥': { multiplier: 1.5, name: 'DOUBLE FIRE' }
     };
     
     return doubleWins[doubleSymbol] || null;
   }
   
-  // 4. ФРУКТОВЫЕ МИКСЫ
+  // 4. ФРУКТОВЫЕ МИКСЫ (увеличен множитель)
   const fruits = ['🍒', '🍋', '🍊', '🍉', '🍇'];
   const isAllFruits = fruits.includes(a) && fruits.includes(b) && fruits.includes(c);
   const uniqueFruits = new Set([a, b, c]);
   
   // Только если все три фрукта РАЗНЫЕ
   if (isAllFruits && uniqueFruits.size === 3) {
-    return { multiplier: 0.8, name: 'FRUIT MIX' };
+    return { multiplier: 1.2, name: 'FRUIT MIX' };
+  }
+  
+  // 5. ЛЮБАЯ КОМБИНАЦИЯ С ОГНЕМ (новая категория выигрышей)
+  if (a === '🔥' || b === '🔥' || c === '🔥') {
+    const fireCount = [a, b, c].filter(symbol => symbol === '🔥').length;
+    if (fireCount === 1) {
+      return { multiplier: 0.5, name: 'FIRE BONUS' };
+    }
   }
   
   return null;
 };
 
+// Остальной код без изменений...
 function Home({ userData, updateUserData, isActive, language = 'english' }) {
   const [selectedOption, setSelectedOption] = useState('ton');
   const [isSpinning, setIsSpinning] = useState(false);
