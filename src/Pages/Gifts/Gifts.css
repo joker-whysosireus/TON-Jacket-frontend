@@ -21,7 +21,7 @@
 
 .gift-emoji {
     font-size: 7rem;
-    margin-bottom: 30px;
+    margin-bottom: 31px;
 }
 
 .gifts-text {
@@ -46,7 +46,7 @@
 
 /* Стили для кнопки открытия поста в канале */
 .channel-post-button-container {
-    margin-top: 48px;
+    margin-top: 42px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -98,7 +98,7 @@
     }
 
     .channel-post-button {
-        padding: 11px 16px;
+        padding: 11px 15px;
         border: none;
         border-radius: 8px;
         font-size: 0.9rem;
@@ -124,8 +124,8 @@
     }
     
     .channel-post-button-container {
-        margin-top: 20px;
-        width: 340px;
+        margin-top: 25px;
+        width: 320px;
     }
 
     .channel-post-button {
@@ -146,7 +146,7 @@
     
     .gift-emoji {
         font-size: 7.5rem;
-        margin-bottom: 42px;
+        margin-bottom: 40px;
     }
     
     .gifts-text h2 {
@@ -160,7 +160,7 @@
     }
     
     .channel-post-button-container {
-        margin-top: 50px;
+        margin-top: 47px;
     }
     
     .channel-post-button {

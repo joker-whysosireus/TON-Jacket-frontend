@@ -47,7 +47,7 @@
   width: 100%;
   border-radius: 16px;
   padding: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .stat-item {
@@ -102,7 +102,7 @@
 @media (max-height: 670px) {
   .handshake-emoji {
     font-size: 4rem;
-    margin-bottom: 5px;
+    
   }
 
   .invite-description {
@@ -144,16 +144,17 @@
 
   .handshake-emoji {
     font-size: 5rem;
-    
+    margin-top: 10px;
   }
 
   .invite-description {
-    font-size: 0.89rem;
+    font-size: 0.90rem;
     color: rgba(255, 255, 255, 0.7);
     line-height: 1.4;
   }
 
   .stats-section {
+    margin-top: 15px;
     margin-bottom: 10px;
   }
 
@@ -168,7 +169,7 @@
   }
 
   .stats-section {
-    margin-bottom: 50px;
+    margin-bottom: 67px;
   }
 
   .invite-description {
