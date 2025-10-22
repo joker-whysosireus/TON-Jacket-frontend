@@ -291,8 +291,12 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 ]
             };
 
+            console.log('Sending transaction with amount:', amountInNanotons, 'nanotons');
             const result = await tonConnectUI.sendTransaction(transaction);
+            console.log('Transaction result:', result);
 
+            // ВАЖНО: Вызываем функцию deposit-ton после успешной транзакции
+            console.log('Calling deposit-ton function...');
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/deposit-ton', {
                 method: 'POST',
                 headers: {
@@ -305,6 +309,7 @@ function Profile({ userData, updateUserData, language = 'english' }) {
             });
 
             const resultData = await response.json();
+            console.log('Deposit-ton response:', resultData);
 
             if (response.ok) {
                 updateUserData(resultData.data);
@@ -314,8 +319,11 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 setTimeout(() => {
                     setShowDepositModal(false);
                 }, 2000);
+            } else {
+                console.error('Error in deposit-ton function:', resultData.error);
             }
         } catch (error) {
+            console.error('Error in deposit process:', error);
             // Игнорируем ошибки отмены пользователем
         } finally {
             setIsDepositing(false);

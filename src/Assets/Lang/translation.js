@@ -57,8 +57,8 @@ export const translations = {
     
     // Gifts Page
     gifts: {
-      title: "Coming Soon: Exclusive TON NFT Gifts",
-      description: "The TON Mania team is working on integrating with platforms like Fragment and Getgems to bring you unique NFT gifts that you can purchase or win directly from our slot machine! Soon you'll be able to collect, trade, and showcase rare digital items on the TON blockchain.",
+      title: "Coming Soon: Exclusive Telegram Gifts",
+      description: "The TON Mania team is working on Telegram Stars integration so you can receive unique gifts that you can purchase or win directly in our slot machine! Soon, you'll be able to earn amazing Telegram gifts using Stars and showcase them on your profile. Details will be published on our Telegram channel.",
       channelButton: "📢 Check Our Channel Post"
     },
     
@@ -231,8 +231,8 @@ export const translations = {
     
     // Gifts Page
     gifts: {
-      title: "Скоро: Эксклюзивные NFT Подарки",
-      description: "Команда TON Mania работает над интеграцией с платформами Fragment и Getgems, чтобы предложить вам уникальные NFT-подарки, которые можно купить или выиграть прямо в нашем игровом автомате! Скоро вы сможете собирать свою коллекцию порадков в нашем приложении",
+      title: "Скоро: Эксклюзивные Подарки Telegram",
+      description: "Команда TON Mania работает над интеграцией с Telegram Stars, чтобы предложить вам уникальные подарки, которые можно купить или выиграть прямо в нашем игровом автомате! Скоро вы сможете крутить слоты за Stars и получать крутые подарки для вашего профиля.",
       channelButton: "📢 Посмотреть пост в канале"
     },
     
