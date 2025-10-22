@@ -11,6 +11,10 @@
   text-align: center;
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 /* Секция с информацией о друзьях */
 .friends-info-section {
   text-align: center;

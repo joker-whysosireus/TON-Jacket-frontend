@@ -11,6 +11,10 @@
   text-align: center;
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 .gifts-content {
     display: flex;
     flex-direction: column;

@@ -14,6 +14,10 @@
     margin-top: 5px;
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 /* Header Section */
 .profile-header-section {
     display: flex;

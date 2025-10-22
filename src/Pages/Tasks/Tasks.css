@@ -13,6 +13,10 @@
     overflow-y: auto;
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 .tasks-header {
   display: flex;
   flex-direction: column;
