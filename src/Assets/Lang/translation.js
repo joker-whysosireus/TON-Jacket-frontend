@@ -13,6 +13,8 @@ export const translations = {
       topup: "Top-up",
       topupDescription: "Add TON to your balance",
       disconnectConfirm: "Are you sure you want to disconnect your wallet?",
+      cooldownActive: "Available in: {time}",
+      cooldownBadge: "⏰"
     },
 
     // Profile Modals
@@ -51,7 +53,11 @@ export const translations = {
         notice2: "The bot will send you a notification when your TON transfer is completed.",
         withdrawButton: "WITHDRAW TON",
         success: "Success!",
-        processing: "Processing..."
+        processing: "Processing...",
+        cooldownTitle: "⏰ Withdrawal on Cooldown",
+        cooldownMessage: "Next withdrawal available in: {time}",
+        cooldownNotice: "⚠️ Withdrawals are available once every 24 hours",
+        waitButton: "Wait {time}"
       }
     },
     
@@ -187,6 +193,8 @@ export const translations = {
       topup: "Пополнение",
       topupDescription: "Добавить TON на баланс",
       disconnectConfirm: "Вы уверены, что хотите отключить свой кошелек?",
+      cooldownActive: "Доступно через: {time}",
+      cooldownBadge: "⏰"
     },
 
     // Profile Modals
@@ -225,7 +233,11 @@ export const translations = {
         notice2: "Бот отправит вам уведомление, когда перевод TON будет завершен.",
         withdrawButton: "ВЫВЕСТИ TON",
         success: "Успех!",
-        processing: "Обработка..."
+        processing: "Обработка...",
+        cooldownTitle: "⏰ Вывод на перезарядке",
+        cooldownMessage: "Следующий вывод доступен через: {time}",
+        cooldownNotice: "⚠️ Выводы доступны раз в 24 часа",
+        waitButton: "Ждать {time}"
       }
     },
     

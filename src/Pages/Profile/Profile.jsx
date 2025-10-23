@@ -44,6 +44,43 @@ function Profile({ userData, updateUserData, language = 'english' }) {
     // Получаем переводы для текущего языка
     const t = translations[language]?.profile || translations.english.profile;
 
+    // Проверка блокировки вывода
+    const [withdrawLocked, setWithdrawLocked] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    // Проверяем блокировку вывода при загрузке компонента
+    useEffect(() => {
+        checkWithdrawLock();
+        const interval = setInterval(checkWithdrawLock, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const checkWithdrawLock = () => {
+        const lastWithdrawTime = localStorage.getItem('lastWithdrawTime');
+        if (lastWithdrawTime) {
+            const timePassed = Date.now() - parseInt(lastWithdrawTime);
+            const twentyFourHours = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
+            
+            if (timePassed < twentyFourHours) {
+                setWithdrawLocked(true);
+                setTimeLeft(twentyFourHours - timePassed);
+            } else {
+                setWithdrawLocked(false);
+                localStorage.removeItem('lastWithdrawTime');
+            }
+        } else {
+            setWithdrawLocked(false);
+        }
+    };
+
+    const formatTimeLeft = (milliseconds) => {
+        const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+        const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
     // Confetti animation
     const startConfetti = useCallback(() => {
         setShowConfetti(true);
@@ -245,6 +282,10 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 const result = await response.json();
                 
                 if (response.ok) {
+                    // Сохраняем время вывода в localStorage
+                    localStorage.setItem('lastWithdrawTime', Date.now().toString());
+                    setWithdrawLocked(true);
+                    
                     setWithdrawSuccess(true);
                     startConfetti();
                     
@@ -431,16 +472,21 @@ function Profile({ userData, updateUserData, language = 'english' }) {
             <div className="profile-cards-section">
                 {/* Withdrawal Card */}
                 <div 
-                    className="profile-card" 
-                    onClick={() => setShowWithdrawModal(true)}
+                    className={`profile-card ${withdrawLocked ? 'disabled' : ''}`}
+                    onClick={() => !withdrawLocked && setShowWithdrawModal(true)}
                 >
                     <div className="card-content">
                         <div className="card-icon">
                             <ArrowUpFromLineIcon />
                         </div>
                         <div className="card-text">
-                            <h3 className="card-title">{t.withdrawal}</h3>
-                            <p className="card-description">{t.withdrawalDescription}</p>
+                            <h3 className="card-title">
+                                {t.withdrawal}
+                                {withdrawLocked && <span className="cooldown-badge">⏰</span>}
+                            </h3>
+                            <p className="card-description">
+                                {withdrawLocked ? `Available in: ${formatTimeLeft(timeLeft)}` : t.withdrawalDescription}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -496,6 +542,9 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 onWithdraw={handleWithdraw}
                 isWithdrawing={isWithdrawing}
                 withdrawSuccess={withdrawSuccess}
+                withdrawLocked={withdrawLocked}
+                timeLeft={timeLeft}
+                formatTimeLeft={formatTimeLeft}
                 language={language}
             />
 

@@ -3,7 +3,18 @@ import TonLogo from '../../../../Public/TonLogo.png';
 import { translations } from '../../../../Assets/Lang/translation';
 import './Modals.css';
 
-function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, withdrawSuccess, language = 'english' }) {
+function WithdrawModal({ 
+    show, 
+    onClose, 
+    userData, 
+    onWithdraw, 
+    isWithdrawing, 
+    withdrawSuccess, 
+    withdrawLocked,
+    timeLeft,
+    formatTimeLeft,
+    language = 'english' 
+}) {
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
 
@@ -57,9 +68,11 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
         }
     };
 
-    const isValidWithdrawal = withdrawAmount && parseFloat(withdrawAmount) > 0 && 
+    const isValidWithdrawal = withdrawAmount && 
+                            parseFloat(withdrawAmount) > 0 && 
                             parseFloat(withdrawAmount) <= userData?.ton_amount && 
-                            walletAddress.length > 0;
+                            walletAddress.length > 0 &&
+                            !withdrawLocked;
 
     if (!show) return null;
 
@@ -72,6 +85,16 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                 </div>
                 
                 <div className="convert-modal-body">
+                    {withdrawLocked && (
+                        <div className="withdraw-cooldown-notice">
+                            <div className="cooldown-icon">⏰</div>
+                            <div className="cooldown-text">
+                                <strong>Withdrawal on Cooldown</strong>
+                                <p>Next withdrawal available in: {formatTimeLeft(timeLeft)}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="convert-modal-balance withdraw-balance">
                         <div className="balance-content-with-logo">
                             <TonLogoIcon size={32} className="ton-logo-align" />
@@ -90,6 +113,7 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                                 value={walletAddress}
                                 onChange={(e) => setWalletAddress(e.target.value)}
                                 className="wallet-address-input"
+                                disabled={withdrawLocked}
                             />
                         </div>
 
@@ -100,11 +124,12 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                                 value={withdrawAmount}
                                 onChange={handleWithdrawAmountChange}
                                 className="convert-amount-input"
+                                disabled={withdrawLocked}
                             />
                             <button
                                 onClick={handleMaxTonClick}
                                 className="convert-max-button"
-                                disabled={isWithdrawing}
+                                disabled={isWithdrawing || withdrawLocked}
                             >
                                 {t.maxButton}
                             </button>
@@ -113,14 +138,19 @@ function WithdrawModal({ show, onClose, userData, onWithdraw, isWithdrawing, wit
                         <div className="withdraw-notice">
                             <p>{t.notice1}</p>
                             <p>{t.notice2}</p>
+                            {withdrawLocked && (
+                                <p className="cooldown-notice">⚠️ Withdrawals are available once every 24 hours</p>
+                            )}
                         </div>
 
                         <button
                             onClick={handleWithdraw}
-                            disabled={!isValidWithdrawal || isWithdrawing}
-                            className={`convert-modal-button withdraw-action-btn ${!isValidWithdrawal || isWithdrawing ? 'disabled' : ''}`}
+                            disabled={!isValidWithdrawal || isWithdrawing || withdrawLocked}
+                            className={`convert-modal-button withdraw-action-btn ${!isValidWithdrawal || isWithdrawing || withdrawLocked ? 'disabled' : ''}`}
                         >
-                            {isWithdrawing ? (
+                            {withdrawLocked ? (
+                                `Wait ${formatTimeLeft(timeLeft)}`
+                            ) : isWithdrawing ? (
                                 withdrawSuccess ? (
                                     t.success
                                 ) : (

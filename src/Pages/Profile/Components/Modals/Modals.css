@@ -6,6 +6,8 @@
     --success-color: #4CAF50;
     --warning-color: #ff9800;
     --error-color: #f44336;
+    --cooldown-color: #ff6b6b;
+    --cooldown-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
 }
 
 .convert-modal-overlay {
@@ -725,7 +727,102 @@
     opacity: 1;
 }
 
-/* Responsive adjustments */
+/* Стили для блокировки вывода */
+.withdraw-cooldown-notice {
+    background: var(--cooldown-gradient);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: shake 0.5s ease-in-out;
+}
+
+.cooldown-icon {
+    font-size: 24px;
+    animation: spin-clockwise 2s linear infinite;
+}
+
+@keyframes spin-clockwise {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.cooldown-text {
+    flex: 1;
+}
+
+.cooldown-text strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.cooldown-text p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.cooldown-notice {
+    color: var(--cooldown-color);
+    font-weight: 600;
+    margin-top: 10px;
+    text-align: center;
+    padding: 8px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Стили для заблокированных полей ввода */
+.wallet-address-input:disabled,
+.convert-amount-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.3);
+    border-color: #555;
+}
+
+.convert-max-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #555;
+}
+
+/* Специальные стили для кнопки вывода в режиме ожидания */
+.withdraw-action-btn.cooldown-state {
+    background: var(--cooldown-gradient) !important;
+    color: white !important;
+    cursor: not-allowed;
+    animation: pulse-cooldown 2s infinite;
+}
+
+@keyframes pulse-cooldown {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
+    }
+}
+
+/* Стили для таймера обратного отсчета */
+.cooldown-timer {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* Адаптивные стили для мобильных устройств */
 @media (max-width: 480px) {
     .convert-modal-content {
         border-radius: 15px 15px 0 0;
@@ -909,6 +1006,12 @@
         background: #fff;
         color: #000;
     }
+    
+    .withdraw-cooldown-notice {
+        background: #ff0000;
+        color: white;
+        border: 2px solid #fff;
+    }
 }
 
 /* Reduced motion support */
@@ -931,5 +1034,18 @@
         animation: none;
         border: 2px solid #fff;
         border-right-color: transparent;
+    }
+    
+    .cooldown-icon {
+        animation: none;
+    }
+    
+    .withdraw-action-btn.cooldown-state {
+        animation: none;
+    }
+    
+    .shake-animation,
+    .bounce-animation {
+        animation: none;
     }
 }
