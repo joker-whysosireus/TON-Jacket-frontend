@@ -257,17 +257,6 @@ function Profile({ userData, updateUserData, language = 'english' }) {
         setShowWithdrawModal(true);
     };
 
-    // Обработчик клика по карточке пополнения
-    const handleDepositClick = () => {
-        const alertTexts = {
-            english: "Technical issues, we'll fix it soon!",
-            russian: "Технические неполадки, скоро все починим!"
-        };
-        
-        alert(alertTexts[language] || alertTexts.english);
-        console.log("Deposit functionality temporarily disabled - technical issues");
-    };
-
     const handleConvert = async () => {
         const amount = userData?.coins || 0;
         if (amount > 0 && amount >= minConvertAmount) {
@@ -557,7 +546,7 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 {/* Top-up Card */}
                 <div 
                     className="profile-card" 
-                    onClick={handleDepositClick}
+                    onClick={() => setShowDepositModal(true)}
                 >
                     <div className="card-content">
                         <div className="card-icon">
@@ -595,8 +584,7 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 language={language}
             />
 
-            {/* DepositModal временно отключен */}
-            {/* <DepositModal 
+            <DepositModal 
                 show={showDepositModal}
                 onClose={() => setShowDepositModal(false)}
                 userData={userData}
@@ -604,7 +592,7 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 isDepositing={isDepositing}
                 depositSuccess={depositSuccess}
                 language={language}
-            /> */}
+            />
 
             <Menu language={language} />
         </div>
