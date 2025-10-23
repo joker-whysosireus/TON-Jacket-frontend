@@ -45,18 +45,18 @@ export const translations = {
       },
       withdraw: {
         title: "💰 Withdraw TON",
-        availableForWithdrawal: "Available for withdrawal",
+        availableForWithdrawal: "Available for withdraw",
         walletPlaceholder: "Wallet address (EQ...)",
         amountPlaceholder: "Amount (TON)",
         maxButton: "MAX",
-        notice1: "⚠️ Withdrawal may take up to 21 days to process.",
+        notice1: "⚠️ Withdraw may take up to 21 days to process.",
         notice2: "The bot will send you a notification when your TON transfer is completed.",
         withdrawButton: "WITHDRAW TON",
         success: "Success!",
         processing: "Processing...",
-        cooldownTitle: "⏰ Withdrawal on Cooldown",
-        cooldownMessage: "Next withdrawal available in: {time}",
-        cooldownNotice: "⚠️ Withdrawals are available once every 24 hours",
+        cooldownTitle: "Withdraw",
+        cooldownMessage: "Next withdraw available in: {time}",
+        cooldownNotice: "⚠️ Withdraw are available once every 24 hours",
         waitButton: "Wait {time}"
       }
     },
