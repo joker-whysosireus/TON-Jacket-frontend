@@ -39,6 +39,9 @@ function WithdrawModal({
             if (wallet && wallet !== "no wallet" && wallet !== "" && wallet !== "undefined") {
                 setWalletAddress(wallet);
             }
+            
+            // Проверяем условия при открытии модального окна
+            checkWithdrawConditions();
         }
     }, [show, userData?.wallet]);
 
@@ -47,6 +50,25 @@ function WithdrawModal({
             setWithdrawAmount('');
         }
     }, [show]);
+
+    // Функция проверки условий вывода
+    const checkWithdrawConditions = () => {
+        const hasDepositedEnough = userData?.deposit_amount >= 1;
+        const hasPlacedBet = userData?.bet_amount > 0;
+        
+        if (!hasDepositedEnough || !hasPlacedBet) {
+            const alertTexts = {
+                english: "Withdrawal is not available. To withdraw funds:\n\n• Deposit at least 1 TON to your balance\n• Place at least one bet in the game\n\nAfter completing these conditions, you will be able to withdraw your TON.",
+                russian: "Вывод недоступен. Для вывода средств:\n\n• Пополните баланс минимум на 1 TON\n• Сделайте хотя бы одну ставку в игре\n\nПосле выполнения этих условий вы сможете выводить TON."
+            };
+            
+            alert(alertTexts[language] || alertTexts.english);
+            onClose();
+            return false;
+        }
+        
+        return true;
+    };
 
     const handleWithdrawAmountChange = (e) => {
         const value = e.target.value;
@@ -64,6 +86,11 @@ function WithdrawModal({
 
     const handleWithdraw = async () => {
         if (parseFloat(withdrawAmount) > 0 && walletAddress) {
+            // Дополнительная проверка перед отправкой
+            if (!checkWithdrawConditions()) {
+                return;
+            }
+            
             await onWithdraw(withdrawAmount, walletAddress);
         }
     };

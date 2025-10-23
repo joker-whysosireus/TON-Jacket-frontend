@@ -221,6 +221,42 @@ function Profile({ userData, updateUserData, language = 'english' }) {
         }
     }, [userFriendlyAddress, userData, updateUserData]);
 
+    // Функция проверки возможности вывода
+    const checkWithdrawAvailability = () => {
+        // Проверяем, пополнял ли пользователь баланс минимум на 1 TON
+        const hasDepositedEnough = userData?.deposit_amount >= 1;
+        
+        // Проверяем, делал ли пользователь хотя бы одну ставку
+        const hasPlacedBet = userData?.bet_amount > 0;
+        
+        if (!hasDepositedEnough || !hasPlacedBet) {
+            // Тексты для alert в зависимости от языка
+            const alertTexts = {
+                english: "Withdrawal is not available. To withdraw funds:\n\n• Deposit at least 1 TON to your balance\n• Place at least one bet in the game\n\nAfter completing these conditions, you will be able to withdraw your TON.",
+                russian: "Вывод недоступен. Для вывода средств:\n\n• Пополните баланс минимум на 1 TON\n• Сделайте хотя бы одну ставку в игре\n\nПосле выполнения этих условий вы сможете выводить TON."
+            };
+            
+            alert(alertTexts[language] || alertTexts.english);
+            return false;
+        }
+        
+        return true;
+    };
+
+    // Обработчик клика по карточке вывода
+    const handleWithdrawClick = () => {
+        if (withdrawLocked) {
+            return;
+        }
+        
+        // Проверяем условия для вывода
+        if (!checkWithdrawAvailability()) {
+            return;
+        }
+        
+        setShowWithdrawModal(true);
+    };
+
     const handleConvert = async () => {
         const amount = userData?.coins || 0;
         if (amount > 0 && amount >= minConvertAmount) {
@@ -473,7 +509,7 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 {/* Withdrawal Card */}
                 <div 
                     className={`profile-card ${withdrawLocked ? 'disabled' : ''}`}
-                    onClick={() => !withdrawLocked && setShowWithdrawModal(true)}
+                    onClick={handleWithdrawClick}
                 >
                     <div className="card-content">
                         <div className="card-icon">

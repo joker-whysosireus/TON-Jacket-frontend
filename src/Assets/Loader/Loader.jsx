@@ -84,31 +84,35 @@ const Loader = ({ userData, onComplete, currentLanguage, onLanguageChange }) => 
                 content: "Your information is used to: process game transactions, ensure platform security, provide customer support, improve user experience, and comply with legal obligations." 
             },
             { 
-                title: "4. TON Blockchain Specifics", 
+                title: "4. Withdrawal Conditions", 
+                content: "Withdrawal of TON is available only after a deposit of at least 1 TON and at least one bet placed in the game." 
+            },
+            { 
+                title: "5. TON Blockchain Specifics", 
                 content: "Due to the nature of blockchain technology, your TON wallet address and transaction history are publicly visible on the blockchain and cannot be modified or deleted." 
             },
             { 
-                title: "5. Data Security", 
+                title: "6. Data Security", 
                 content: "We implement industry-standard security measures to protect your data. However, we cannot guarantee absolute security of information transmitted over the internet." 
             },
             { 
-                title: "6. Third-Party Services", 
+                title: "7. Third-Party Services", 
                 content: "We integrate with TON blockchain and Telegram Mini Apps platform. These third parties have their own privacy policies governing data use." 
             },
             { 
-                title: "7. User Rights (Telegram Mini Apps)", 
+                title: "8. User Rights (Telegram Mini Apps)", 
                 content: "According to Telegram's documentation for Mini Apps, you have the right to: access your personal data, request correction of inaccuracies, withdraw consent for processing, and request deletion of your account data. You can exercise these rights by contacting us through our Telegram bot." 
             },
             { 
-                title: "8. Risk Disclaimer", 
+                title: "9. Risk Disclaimer", 
                 content: "The TON Mania team does not promise or guarantee big winnings. The application is entertainment, and losing is always possible. By using TON Mania, you acknowledge that cryptocurrency transactions and gaming involve high risks, and you accept full responsibility for any possible financial losses." 
             },
             { 
-                title: "9. Policy Changes", 
+                title: "10. Policy Changes", 
                 content: "We may update this policy. Continued use of TON Mania after changes constitutes acceptance of the revised policy." 
             },
             { 
-                title: "10. Contact Information", 
+                title: "11. Contact Information", 
                 content: "For privacy-related questions, contact us via Telegram: @tonmania_support" 
             }
         ],
@@ -126,31 +130,35 @@ const Loader = ({ userData, onComplete, currentLanguage, onLanguageChange }) => 
                 content: "Ваша информация используется для: обработки игровых транзакций, обеспечения безопасности платформы, предоставления поддержки пользователям, улучшения пользовательского опыта и выполнения юридических обязательств." 
             },
             { 
-                title: "4. Особенности блокчейна TON", 
+                title: "4. Условия вывода", 
+                content: "Вывод TON доступен только после пополнения баланса на сумму не менее 1 TON и хотя бы одной сделанной ставки в игре." 
+            },
+            { 
+                title: "5. Особенности блокчейна TON", 
                 content: "В связи с природой блокчейн-технологии, ваш TON-адрес кошелька и история транзакций являются публично видимыми в блокчейне и не могут быть изменены или удалены." 
             },
             { 
-                title: "5. Безопасность данных", 
+                title: "6. Безопасность данных", 
                 content: "Мы применяем соответствующие стандартам индустрии меры безопасности для защиты ваших данных. Однако мы не можем гарантировать абсолютную безопасность информации, передаваемой через интернет." 
             },
             { 
-                title: "6. Сторонние сервисы", 
+                title: "7. Сторонние сервисы", 
                 content: "Мы интегрируемся с блокчейном TON и платформой Telegram Mini Apps. Эти третьи стороны имеют собственные политики конфиденциальности, регулирующие использование данных." 
             },
             { 
-                title: "7. Права пользователя (Telegram Mini Apps)", 
+                title: "8. Права пользователя (Telegram Mini Apps)", 
                 content: "Согласно документации Telegram для Mini Apps, вы имеете право: на доступ к вашим персональным данным, запрос на исправление неточностей, отзыв согласия на обработку и запрос на удаление данных вашего аккаунта. Вы можете осуществить эти права, связавшись с нами через нашего бота в Telegram." 
             },
             { 
-                title: "8. Отказ от ответственности", 
+                title: "9. Отказ от ответственности", 
                 content: "Команда TON Mania не обещает и не гарантирует больших выигрышей. Приложение является игровым развлечением, и проигрыш всегда возможен. Используя TON Mania, вы осознаёте, что криптовалютные операции и азартные игры связаны с высокими рисками, и вы принимаете на себя полную ответственность за все возможные финансовые потери." 
             },
             { 
-                title: "9. Изменения политики", 
+                title: "10. Изменения политики", 
                 content: "Мы можем обновлять данную политику. Продолжение использования TON Mania после изменений означает принятие обновленной политики." 
             },
             { 
-                title: "10. Контактная информация", 
+                title: "11. Контактная информация", 
                 content: "По вопросам, связанным с конфиденциальностью, свяжитесь с нами через Telegram: @tonmania_support" 
             }
         ]
