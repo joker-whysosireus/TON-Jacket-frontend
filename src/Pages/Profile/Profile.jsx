@@ -368,51 +368,90 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 ]
             };
 
-            console.log('Sending transaction with amount:', amountInNanotons, 'nanotons');
+            console.log('🔄 Sending transaction with amount:', amountInNanotons, 'nanotons');
             const result = await tonConnectUI.sendTransaction(transaction);
             
-            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Извлекаем хэш транзакции
-            const getTransactionHash = (txResult) => {
-                if (!txResult) return 'unknown';
+            // 🔴 ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ РЕЗУЛЬТАТА ТРАНЗАКЦИИ
+            console.log('📦 Raw transaction result:', JSON.stringify(result, null, 2));
+            
+            const getTransactionIdentifier = (txResult) => {
+                if (!txResult) {
+                    console.error('❌ Transaction result is empty');
+                    return 'unknown';
+                }
+                
+                console.log('🔍 Analyzing transaction result structure:');
+                console.log('Type:', typeof txResult);
+                
+                if (typeof txResult === 'object') {
+                    console.log('Keys:', Object.keys(txResult));
+                }
                 
                 // Если это строка (boc)
                 if (typeof txResult === 'string') {
-                    console.log('Transaction BOC received:', txResult.substring(0, 50) + '...');
-                    return txResult.length > 64 ? txResult.substring(0, 64) : txResult;
+                    console.log('📄 Transaction BOC length:', txResult.length);
+                    console.log('📄 BOC preview:', txResult.substring(0, 100) + '...');
+                    return {
+                        type: 'boc',
+                        value: txResult
+                    };
                 }
                 
                 // Если это объект с hash полем
                 if (txResult.hash) {
-                    console.log('Transaction hash received:', txResult.hash);
-                    return txResult.hash;
+                    console.log('🔑 Transaction hash found:', txResult.hash);
+                    console.log('🔑 Hash length:', txResult.hash.length);
+                    return {
+                        type: 'hash',
+                        value: txResult.hash
+                    };
                 }
                 
                 // Если это объект с boc полем
                 if (txResult.boc) {
-                    console.log('Transaction BOC in object:', txResult.boc.substring(0, 50) + '...');
-                    return txResult.boc.length > 64 ? txResult.boc.substring(0, 64) : txResult.boc;
+                    console.log('📦 Transaction BOC in object, length:', txResult.boc.length);
+                    return {
+                        type: 'boc',
+                        value: txResult.boc
+                    };
                 }
                 
-                // Пытаемся найти хэш в любом поле объекта
+                // Детальный поиск по всем полям
+                console.log('🔎 Deep searching for transaction identifier...');
                 for (let key in txResult) {
-                    if (typeof txResult[key] === 'string' && txResult[key].length >= 64) {
-                        console.log('Found potential hash in field', key, ':', txResult[key]);
-                        return txResult[key];
+                    const value = txResult[key];
+                    if (typeof value === 'string') {
+                        console.log(`Field "${key}":`, value.length > 100 ? value.substring(0, 100) + '...' : value);
+                        if (value.length >= 64) {
+                            console.log(`🎯 Potential transaction identifier found in field "${key}"`);
+                            return {
+                                type: 'hash',
+                                value: value
+                            };
+                        }
                     }
                 }
                 
-                return JSON.stringify(txResult).substring(0, 100); // Fallback
+                console.error('❌ No transaction identifier found in result');
+                return {
+                    type: 'unknown',
+                    value: 'not_found_' + Date.now()
+                };
             };
 
-            const transactionHash = getTransactionHash(result);
-            console.log('Final transaction hash for logs:', transactionHash);
+            const txIdentifier = getTransactionIdentifier(result);
+            console.log('✅ Transaction identifier:', txIdentifier);
 
-            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Ждем 15 секунд для подтверждения в блокчейне
-            console.log('Waiting 15 seconds for blockchain confirmation...');
+            // Создаем ссылку для просмотра транзакций кошелька
+            const walletHistoryUrl = `https://tonviewer.com/${depositWalletAddress}`;
+            console.log('🔗 Wallet history URL:', walletHistoryUrl);
+
+            // Ждем подтверждения в блокчейне
+            console.log('⏳ Waiting 15 seconds for blockchain confirmation...');
             await new Promise(resolve => setTimeout(resolve, 15000));
             
-            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Только теперь вызываем deposit-ton с хэшем транзакции
-            console.log('Calling deposit-ton function with transaction hash:', transactionHash);
+            // Вызываем deposit-ton с данными транзакции
+            console.log('📤 Calling deposit-ton function with transaction data...');
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/deposit-ton', {
                 method: 'POST',
                 headers: {
@@ -421,30 +460,49 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 body: JSON.stringify({
                     userId: userData.telegram_user_id,
                     amount: parseFloat(depositAmount),
-                    transactionHash: transactionHash // 🔴 ПЕРЕДАЕМ ХЭШ ТРАНЗАКЦИИ
+                    transactionType: txIdentifier.type,
+                    transactionData: txIdentifier.value,
+                    walletHistoryUrl: walletHistoryUrl,
+                    userWallet: userFriendlyAddress,
+                    timestamp: new Date().toISOString()
                 })
             });
 
             const resultData = await response.json();
-            console.log('Deposit-ton response:', resultData);
+            console.log('📥 Deposit-ton response:', resultData);
 
             if (response.ok) {
                 updateUserData(resultData.data);
                 setDepositSuccess(true);
                 startConfetti();
                 
+                // 🔴 ПОКАЗЫВАЕМ ССЫЛКУ ПОЛЬЗОВАТЕЛЮ ДЛЯ ПРОВЕРКИ ТРАНЗАКЦИЙ
+                const alertTexts = {
+                    english: `Deposit successful! You can check all transactions on your wallet here: ${walletHistoryUrl}`,
+                    russian: `Пополнение прошло успешно! Вы можете проверить все транзакции на своем кошельке здесь: ${walletHistoryUrl}`
+                };
+                
+                alert(alertTexts[language] || alertTexts.english);
+                
                 setTimeout(() => {
                     setShowDepositModal(false);
                 }, 2000);
             } else {
-                console.error('Error in deposit-ton function:', resultData.error);
-                alert('Transaction may have been successful, but there was an error updating your balance. Transaction reference: ' + transactionHash);
+                console.error('❌ Error in deposit-ton function:', resultData.error);
+                const errorTexts = {
+                    english: 'Transaction may have been successful, but there was an error updating your balance. Please contact support.',
+                    russian: 'Транзакция могла пройти успешно, но произошла ошибка при обновлении баланса. Пожалуйста, обратитесь в поддержку.'
+                };
+                alert(errorTexts[language] || errorTexts.english);
             }
         } catch (error) {
-            console.error('Error in deposit process:', error);
-            // Игнорируем ошибки отмены пользователем
+            console.error('❌ Error in deposit process:', error);
             if (error?.message?.includes('Rejected') || error?.message?.includes('Cancelled')) {
-                alert('Transaction was cancelled by user');
+                const cancelTexts = {
+                    english: 'Transaction was cancelled by user',
+                    russian: 'Транзакция была отменена пользователем'
+                };
+                alert(cancelTexts[language] || cancelTexts.english);
             } else {
                 alert('Transaction error: ' + error.message);
             }
