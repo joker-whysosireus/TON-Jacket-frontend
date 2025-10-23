@@ -370,10 +370,49 @@ function Profile({ userData, updateUserData, language = 'english' }) {
 
             console.log('Sending transaction with amount:', amountInNanotons, 'nanotons');
             const result = await tonConnectUI.sendTransaction(transaction);
-            console.log('Transaction result:', result);
+            
+            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Извлекаем хэш транзакции
+            const getTransactionHash = (txResult) => {
+                if (!txResult) return 'unknown';
+                
+                // Если это строка (boc)
+                if (typeof txResult === 'string') {
+                    console.log('Transaction BOC received:', txResult.substring(0, 50) + '...');
+                    return txResult.length > 64 ? txResult.substring(0, 64) : txResult;
+                }
+                
+                // Если это объект с hash полем
+                if (txResult.hash) {
+                    console.log('Transaction hash received:', txResult.hash);
+                    return txResult.hash;
+                }
+                
+                // Если это объект с boc полем
+                if (txResult.boc) {
+                    console.log('Transaction BOC in object:', txResult.boc.substring(0, 50) + '...');
+                    return txResult.boc.length > 64 ? txResult.boc.substring(0, 64) : txResult.boc;
+                }
+                
+                // Пытаемся найти хэш в любом поле объекта
+                for (let key in txResult) {
+                    if (typeof txResult[key] === 'string' && txResult[key].length >= 64) {
+                        console.log('Found potential hash in field', key, ':', txResult[key]);
+                        return txResult[key];
+                    }
+                }
+                
+                return JSON.stringify(txResult).substring(0, 100); // Fallback
+            };
 
-            // ВАЖНО: Вызываем функцию deposit-ton после успешной транзакции
-            console.log('Calling deposit-ton function...');
+            const transactionHash = getTransactionHash(result);
+            console.log('Final transaction hash for logs:', transactionHash);
+
+            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Ждем 15 секунд для подтверждения в блокчейне
+            console.log('Waiting 15 seconds for blockchain confirmation...');
+            await new Promise(resolve => setTimeout(resolve, 15000));
+            
+            // 🔴 ВАЖНОЕ ИСПРАВЛЕНИЕ: Только теперь вызываем deposit-ton с хэшем транзакции
+            console.log('Calling deposit-ton function with transaction hash:', transactionHash);
             const response = await fetch('https://ton-jacket-backend.netlify.app/.netlify/functions/deposit-ton', {
                 method: 'POST',
                 headers: {
@@ -381,7 +420,8 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 },
                 body: JSON.stringify({
                     userId: userData.telegram_user_id,
-                    amount: parseFloat(depositAmount)
+                    amount: parseFloat(depositAmount),
+                    transactionHash: transactionHash // 🔴 ПЕРЕДАЕМ ХЭШ ТРАНЗАКЦИИ
                 })
             });
 
@@ -398,10 +438,16 @@ function Profile({ userData, updateUserData, language = 'english' }) {
                 }, 2000);
             } else {
                 console.error('Error in deposit-ton function:', resultData.error);
+                alert('Transaction may have been successful, but there was an error updating your balance. Transaction reference: ' + transactionHash);
             }
         } catch (error) {
             console.error('Error in deposit process:', error);
             // Игнорируем ошибки отмены пользователем
+            if (error?.message?.includes('Rejected') || error?.message?.includes('Cancelled')) {
+                alert('Transaction was cancelled by user');
+            } else {
+                alert('Transaction error: ' + error.message);
+            }
         } finally {
             setIsDepositing(false);
         }
