@@ -134,8 +134,8 @@ function Home({ userData, updateUserData, isActive, language = 'english' }) {
   const animationRef = useRef(null);
 
   const safeUserData = userData || {
-    ton_amount: 100.000,
-    coins: 500.000,
+    ton_amount: 0.000,
+    coins: 0.000,
     telegram_user_id: null,
     first_name: 'User',
     username: 'user'
