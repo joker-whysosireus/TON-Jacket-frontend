@@ -29,8 +29,8 @@ const BalanceSection = ({ userData, onAddBalance }) => {
   const navigate = useNavigate();
   
   const safeUserData = userData || {
-    ton_amount: 100.000,
-    coins: 500.000
+    ton_amount: 0.000,
+    coins: 0.000
   };
 
   const handleTonButtonClick = () => {
