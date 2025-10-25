@@ -13,11 +13,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     const balanceT = translations[language]?.balance || translations.english.balance;
     const commonT = translations[language]?.common || translations.english.common;
 
-    // СБРОС ЛОКАЛЬНОГО ХРАНИЛИЩА - изменяем ключ для принудительного сброса
-    const storageKey = 'tasks_v2'; // Измененный ключ для сброса хранилища
-    
     const [tasks, setTasks] = useState(() => {
-        const storedTasksString = localStorage.getItem(storageKey);
+        const storedTasksString = localStorage.getItem('tasks');
         const defaultTasks = {
             task0: false,
             task1: false,
@@ -45,12 +42,8 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     // Состояния для Monetag рекламы
     const [monetagAdAvailable, setMonetagAdAvailable] = useState(false);
     const [isMonetagLoading, setIsMonetagLoading] = useState(false);
-    
-    // СБРОС COOLDOWN - изменяем ключ для принудительного сброса
-    const cooldownKey = 'monetagCooldown_v2';
-    
     const [monetagCooldown, setMonetagCooldown] = useState(() => {
-        const stored = localStorage.getItem(cooldownKey);
+        const stored = localStorage.getItem('monetagCooldown');
         return stored ? parseInt(stored) : 0;
     });
     const [remainingTime, setRemainingTime] = useState(0);
@@ -60,7 +53,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
 
     // Сохранение cooldown в localStorage
     useEffect(() => {
-        localStorage.setItem(cooldownKey, monetagCooldown.toString());
+        localStorage.setItem('monetagCooldown', monetagCooldown.toString());
     }, [monetagCooldown]);
 
     // Проверка доступности функции Monetag
@@ -92,7 +85,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
     }, [monetagCooldown]);
 
     useEffect(() => {
-        localStorage.setItem(storageKey, JSON.stringify(tasks));
+        localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
 
     // Функция для показа рекламы Monetag
@@ -152,7 +145,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         // НЕМЕДЛЕННО обновляем состояние
         const updatedTasks = { ...tasks, [taskKey]: true };
         setTasks(updatedTasks);
-        localStorage.setItem(storageKey, JSON.stringify(updatedTasks));
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
 
         if (channel) {
             window.open(channel, '_blank');
@@ -179,13 +172,13 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 // Откатываем состояние в случае ошибки
                 const revertedTasks = { ...tasks };
                 setTasks(revertedTasks);
-                localStorage.setItem(storageKey, JSON.stringify(revertedTasks));
+                localStorage.setItem('tasks', JSON.stringify(revertedTasks));
             }
         } catch (error) {
             // Откатываем состояние в случае ошибки
             const revertedTasks = { ...tasks };
             setTasks(revertedTasks);
-            localStorage.setItem(storageKey, JSON.stringify(revertedTasks));
+            localStorage.setItem('tasks', JSON.stringify(revertedTasks));
         }
     };
 
@@ -253,9 +246,19 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
         }
     };
 
-    // ВРЕМЕННО УДАЛЕНА РЕКЛАМНАЯ ЗАДАЧА - только для сброса хранилища
+    // Обновленный taskList с использованием переводов
     const taskList = [
-        // РЕКЛАМНАЯ ЗАДАЧА УДАЛЕНА - task0 временно отсутствует
+        {
+            id: 0,
+            type: 'ad',
+            title: t.tasks && t.tasks[0] ? t.tasks[0].title : 'Watch a short video',
+            reward: '+75 ' + (balanceT.coins || 'coins'),
+            rewardAmount: 75,
+            requiredAmount: 1,
+            currentProgress: 0,
+            buttonText: t.watch || 'Watch',
+            taskKey: 'task0'
+        },
         {
             id: 1,
             type: 'subscribe',
@@ -364,7 +367,7 @@ function Tasks({ userData, updateUserData, language = 'english' }) {
                 <div className="tasks-list">
                     {taskList.map((task, index) => {
                         const taskIcon = getTaskIcon(task);
-                        const isCompleted = task.type !== 'ad' && tasks[task.taskKey];
+                        const isCompleted = task.type !== 'ad' && tasks[task.taskKey]; // Для ad задачи не используем completed состояние
                         const isAvailable = isTaskAvailable(task);
                         
                         // Для ad задачи определяем доступность по-другому
