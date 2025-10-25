@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import TonLogo from '../../../../Public/TonLogo.png';
 import { translations } from '../../../../Assets/Lang/translation';
-import './Modals.css';
+import './WithdrawModal.css'
 
 function WithdrawModal({ 
     show, 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { translations } from '../../../../Assets/Lang/translation';
-import './Modals.css';
+import './ConvertModal.css'
 
 function ConvertModal({ show, onClose, userData, onConvert, isConverting, convertSuccess, language = 'english' }) {
     const [coinsAmount, setCoinsAmount] = useState('');

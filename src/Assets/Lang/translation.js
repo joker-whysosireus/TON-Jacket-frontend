@@ -30,7 +30,7 @@ export const translations = {
         converting: "Converting..."
       },
       deposit: {
-        title: "💰 Deposit TON",
+        title: "💰 Deposit",
         selectAmount: "Select amount to deposit",
         depositButton: "Deposit {amount} TON",
         success: "Success!",
@@ -41,7 +41,17 @@ export const translations = {
         bonusBadge: "+50% BONUS",
         promoNotice: "Limited Time: Get 1.5x on all deposits! Offer ends in 2 weeks.",
         youWillReceive: "You will receive",
-        bonusAmount: "+{amount} TON bonus"
+        bonusAmount: "+{amount} TON bonus",
+        // Новые переводы для Stars
+        tonOptionTitle: "TON",
+        tonOptionDescription: "Deposit TON cryptocurrency to play and withdraw",
+        starsOptionTitle: "Stars", 
+        starsOptionDescription: "Purchase Telegram Stars for in-app purchases and gifts",
+        starsTitle: "⭐ Deposit Stars",
+        tonTitle: "🚀 Deposit TON",
+        starsBuyButton: "Buy {amount} Stars",
+        starsProcessing: "Processing...",
+        starsSuccess: "Success!"
       },
       withdraw: {
         title: "💰 Withdraw TON",
@@ -210,7 +220,7 @@ export const translations = {
         converting: "Конвертация..."
       },
       deposit: {
-        title: "💰 Пополнить TON",
+        title: "💰 Пополнение",
         selectAmount: "Выберите сумму для пополнения",
         depositButton: "Пополнить {amount} TON",
         success: "Успех!",
@@ -221,7 +231,17 @@ export const translations = {
         bonusBadge: "+50% БОНУС",
         promoNotice: "Ограниченное время: Получайте 1.5x на все пополнения! Предложение действует 2 недели.",
         youWillReceive: "Вы получите",
-        bonusAmount: "+{amount} TON бонус"
+        bonusAmount: "+{amount} TON бонус",
+        // Новые переводы для Stars
+        tonOptionTitle: "TON",
+        tonOptionDescription: "Пополнить криптовалюту TON для игры и вывода",
+        starsOptionTitle: "Stars",
+        starsOptionDescription: "Купить Telegram Stars для внутриигровых покупок и подарков",
+        starsTitle: "⭐ Пополнить Stars", 
+        tonTitle: "🚀 Пополнить TON",
+        starsBuyButton: "Купить {amount} Stars",
+        starsProcessing: "Обработка...",
+        starsSuccess: "Успех!"
       },
       withdraw: {
         title: "💰 Вывести TON",
