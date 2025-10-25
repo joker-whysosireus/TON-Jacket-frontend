@@ -2,6 +2,7 @@ import './Friends.css';
 import Menu from '../../Assets/Menus/Menu/Menu';
 import BalanceSection from '../Home/Components/Balance/BalanceSection';
 import { translations } from '../../Assets/Lang/translation';
+import TonLogo from '../../Public/TonLogo.png';
 
 function Friends({ userData, updateUserData, language = 'english' }) {
     // Получаем переводы для текущего языка
@@ -49,16 +50,31 @@ function Friends({ userData, updateUserData, language = 'english' }) {
 
             {/* Секция с коинами и количеством друзей */}
             <div className="stats-section">
-                <div className="stat-item">
-                    <div className="stat-value">🏅{userData?.coins_for_invite?.toFixed(3) || '0.000'}</div>
-                    <div className="stat-label">
-                        {language === 'russian' ? 'Монет за приглашения' : 'Coins from Invites'}
+                <div className="stats-row">
+                    <div className="stat-item">
+                        <div className="stat-value">
+                            <span className="stat-icon">🏅</span>
+                            {userData?.coins_for_invite?.toFixed(3) || '0.000'}
+                        </div>
+                        <div className="stat-label">
+                            {language === 'russian' ? 'Монет за приглашения' : 'Coins from Invites'}
+                        </div>
+                    </div>
+                    
+                    <div className="stat-item">
+                        <div className="stat-value">
+                            <img src={TonLogo} alt="TON" className="stat-icon ton-logo" />
+                            {userData?.ton_for_invite?.toFixed(3) || '0.000'}
+                        </div>
+                        <div className="stat-label">
+                            {language === 'russian' ? 'TON за приглашения' : 'TON from Invites'}
+                        </div>
                     </div>
                 </div>
                 
                 <div className="stat-divider"></div>
                 
-                <div className="stat-item">
+                <div className="stat-item friends-count">
                     <div className="stat-value">{userData?.invited_friends || 0}</div>
                     <div className="stat-label">
                         {language === 'russian' ? 'Приглашено друзей' : 'Friends Invited'}

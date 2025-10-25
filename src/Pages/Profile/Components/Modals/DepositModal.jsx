@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import TonLogo from '../../../../Public/TonLogo.png';
 import { translations, formatString } from '../../../../Assets/Lang/translation';
-import './Modals.css';
+import './DepositModal.css';
 
 function DepositModal({ show, onClose, userData, onDeposit, isDepositing, depositSuccess, language = 'english' }) {
     const [depositAmount, setDepositAmount] = useState('');

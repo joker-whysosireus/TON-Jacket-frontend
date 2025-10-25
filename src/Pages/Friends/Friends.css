@@ -25,7 +25,6 @@
 .handshake-emoji {
   font-size: 7rem;
   display: block;
-
 }
 
 .invite-description {
@@ -46,12 +45,19 @@
 /* Секция со статистикой */
 .stats-section {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   width: 100%;
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 15px;
 }
 
 .stat-item {
@@ -62,24 +68,42 @@
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.ton-logo {
+  width: 24px;
+  height: 24px;
 }
 
 .stat-label {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+.friends-count .stat-value {
+  font-size: 2rem;
+}
+
 .stat-divider {
-  width: 1px;
-  height: 50px;
+  width: 80%;
+  height: 1px;
   background: rgba(255, 255, 255, 0.2);
-  margin: 0 20px;
+  margin: 15px 0;
 }
 
 /* Стили для кнопки */
@@ -106,7 +130,6 @@
 @media (max-height: 670px) {
   .handshake-emoji {
     font-size: 4rem;
-    
   }
 
   .invite-description {
@@ -119,16 +142,19 @@
   }
 
   .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+
+  .friends-count .stat-value {
+    font-size: 1.5rem;
   }
 
   .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
 
   .stat-divider {
-    height: 40px;
-    margin: 0 15px;
+    margin: 10px 0;
   }
 
   .Invite-button {
@@ -163,6 +189,10 @@
   }
 
   .stat-value {
+    font-size: 1.3rem;
+  }
+
+  .friends-count .stat-value {
     font-size: 1.8rem;
   }
 }
@@ -182,14 +212,14 @@
 }
 
 @media (max-width: 480px) {
-  .stats-section {
-    flex-direction: column;
-    gap: 20px;
+  .stats-row {
+    flex-direction: row;
+    gap: 10px;
   }
   
   .stat-divider {
     width: 80%;
     height: 1px;
-    margin: 10px 0;
+    margin: 15px 0;
   }
 }
