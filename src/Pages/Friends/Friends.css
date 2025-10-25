@@ -50,14 +50,14 @@
   width: 100%;
   border-radius: 16px;
   padding: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .stats-row {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 35px;
 }
 
 .stat-item {
@@ -68,7 +68,7 @@
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
   color: #fff;
   margin-bottom: 5px;
@@ -142,11 +142,11 @@
   }
 
   .stat-value {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .friends-count .stat-value {
-    font-size: 1.5rem;
+    font-size: 1.9rem;
   }
 
   .stat-label {
@@ -174,7 +174,7 @@
 
   .handshake-emoji {
     font-size: 5rem;
-    margin-top: 10px;
+    margin-top: 5px;
   }
 
   .invite-description {
@@ -184,7 +184,7 @@
   }
 
   .stats-section {
-    margin-top: 15px;
+    margin-top: 5px;
     margin-bottom: 10px;
   }
 
@@ -193,7 +193,7 @@
   }
 
   .friends-count .stat-value {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 }
 
@@ -209,17 +209,11 @@
   .invite-description {
     font-size: 1rem;
   }
-}
 
-@media (max-width: 480px) {
   .stats-row {
-    flex-direction: row;
-    gap: 10px;
-  }
-  
-  .stat-divider {
-    width: 80%;
-    height: 1px;
-    margin: 15px 0;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 12px;
   }
 }
